@@ -12,29 +12,21 @@
         <p>Drag and drop the image into the box below.</p>
     </div>
     <div class="main">
-        <div class="tier-list">
-            <div class="tier-row">
-                <div class="rank">A</div>
-                <div class="dropBox" id="box-a" ondrop="dropHandler(event)" ondragover="dragoverHandler(event)"></div>
-            </div>
-            <div class="tier-row">
-                <div class="rank">B</div>
-                <div class="dropBox" id="box-b" ondrop="dropHandler(event)" ondragover="dragoverHandler(event)"></div>
-            </div>
-        </div>
-    </div>
-    <br>
-    <div id="img1" draggable="true" ondragstart="dragstartHandler(event)" style="background-image: url('https://picsum.photos/100'); width: 100px; height: 100px;">
-    </div>
-    <div id="img2" draggable="true" ondragstart="dragstartHandler(event)" style="background-image: url('https://picsum.photos/100?random=1'); width: 100px; height: 100px;">
-    </div>
-    <div id="img3" draggable="true" ondragstart="dragstartHandler(event)" style="background-image: url('https://picsum.photos/100?random=2'); width: 100px; height: 100px;">
-    </div>
-    <div id="img4" draggable="true" ondragstart="dragstartHandler(event)" style="background-image: url('https://picsum.photos/100?random=3'); width: 100px; height: 100px;">
-    </div>
-    <div id="img5" draggable="true" ondragstart="dragstartHandler(event)" style="background-image: url('https://picsum.photos/100?random=4'); width: 100px; height: 100px;">
+        
     </div>
     <!--Scripts-->
+    <script src="js/node_modules/sortablejs/Sortable.min.js"></script>
     <script src="js/index.js"></script>
+    <script src="js/drag.js"></script>
+
+    <div id="tempDrag" style="
+        position: absolute; 
+        top: 0px; 
+        right: 0px; 
+        bottom: 0px; 
+        overflow: hidden; 
+        z-index: 999;">
+
+    </div>
 </body>
 </html>

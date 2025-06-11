@@ -4,11 +4,6 @@
     box-sizing: border-box;
 }
 
-:root {
-  --min-row-height: 50px;
-  --min-column-width: 50px;
-}
-
 body
 {
     background-color: white;
@@ -25,11 +20,6 @@ body
   padding: 5px;
 }
 
-/* .tier-list {
-  display: flex;
-  flex-direction: column;
-} */
-
 .tier-row {
   display: flex;
   align-items: stretch;
@@ -37,21 +27,40 @@ body
   overflow: hidden;
 }
 
-.rank {
-  flex: 0.2;
+.tier-rank {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: var(--min-row-height);
-  min-width: var(--min-column-width);
-  border: 1px solid #000000;
-  border-right: 0;
+  justify-content: center;
+  min-width: 60px;
+  max-width: 120px;
+  min-height: 60px;
+  padding: 5px;
+  flex-shrink: 0;
+  cursor: pointer;
+  word-break: break-word;
+  white-space: normal;
 }
 
-.dropBox {
-  flex: 2;
-  min-height: var(--min-row-height);
+.tier-drop-box {
+  flex: 4;
   border: 1px solid #000000;
   display: flex;
   flex-wrap: wrap;
+  overflow: hidden;
+  min-height: 60px;
+}
+
+.draggable {
+  cursor: grab;
+  display: flex;
+  max-height: 120px;
+}
+
+.draggable.preview {
+  opacity: 0.25;
+}
+
+.draggable.dragging {
+    position: absolute;
+    right: -250px;
 }
