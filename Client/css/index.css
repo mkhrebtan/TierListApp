@@ -2,29 +2,41 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 body
 {
-    background-color: white;
-    color: black;
+    background-color: rgb(42, 42, 42);
+    color: white;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 20px;
   padding: 15px;
 }
 
 .main {
-  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 15px;
+}
+
+.tier-list {
+  border: 2px solid #000000;
 }
 
 .tier-row {
   display: flex;
   align-items: stretch;
-  margin-bottom: 5px;
   overflow: hidden;
+  border-bottom: 2px solid #000000;
+  min-height: 80px;
+}
+
+.tier-list .tier-row:last-child {
+  border-bottom: none;
 }
 
 .tier-rank {
@@ -33,34 +45,69 @@ body
   justify-content: center;
   min-width: 60px;
   max-width: 120px;
-  min-height: 60px;
-  padding: 5px;
+  padding: 8px;
   flex-shrink: 0;
   cursor: pointer;
   word-break: break-word;
   white-space: normal;
+  color: black;
+  font-size: 21px;
+  font-weight: bold;
 }
 
 .tier-drop-box {
   flex: 4;
-  border: 1px solid #000000;
   display: flex;
   flex-wrap: wrap;
   overflow: hidden;
   min-height: 60px;
 }
 
+.backup-images {
+  background-color: #293237;
+  padding: 10px;
+  border-radius: 5px;
+}
+
 .draggable {
-  cursor: grab;
+  cursor: pointer;
   display: flex;
   max-height: 120px;
 }
 
-.draggable.preview {
-  opacity: 0.25;
+.blur-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); 
+  backdrop-filter: blur(2px); 
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease; 
 }
 
-.draggable.dragging {
-    position: absolute;
-    right: -250px;
+.blur-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.popup {
+  position: fixed;
+  bottom: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: bottom 0.4s ease, opacity 0.4s ease;
+}
+
+.popup.active {
+  bottom: 20%;
+  opacity: 1;
 }

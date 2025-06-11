@@ -8,6 +8,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderList(listData);
   renderBackupImages(backupImages);
   initializeDragAndDrop();
+  initializePopup();
 });
 
 async function fetchJSONData(url) {
@@ -79,7 +80,10 @@ function renderBackupImages(backupImages) {
   }
 
   const backupContainer = document.createElement('div');
-  backupContainer.classList.add('tier-drop-box');
+  backupContainer.classList.add('backup-images');
+
+  const dropBox = document.createElement('div');
+  dropBox.classList.add('tier-drop-box');
 
   backupImages.forEach(image => {
     const imageContainer = document.createElement('div');
@@ -93,8 +97,9 @@ function renderBackupImages(backupImages) {
     imageElement.draggable = false;
 
     imageContainer.appendChild(imageElement);
-    backupContainer.appendChild(imageContainer);
+    dropBox.appendChild(imageContainer);
   });
 
+  backupContainer.appendChild(dropBox);
   main.appendChild(backupContainer);
 }
