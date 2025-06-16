@@ -1,12 +1,22 @@
+const body = document.body;
 const main = document.body.querySelector('.main');
+const dataManager = new TierListDataManager();
+
+listName = '';
+let rows = [];
+let images = [];
 
 window.addEventListener('DOMContentLoaded', async () => {
   const urlList = './data/list.json';
-  const urlBackupImages = './data/images.json';
   const listData = await fetchJSONData(urlList);
-  const backupImages = await fetchJSONData(urlBackupImages);
-  renderList(listData);
-  renderBackupImages(backupImages);
+  if (!listData) {
+    console.error('No data to render');
+    return;
+  }
+
+  dataManager.loadData(listData);
+  renderList();
+  renderBackupImages();
   initializeDragAndDrop();
   initializePopup();
 });
@@ -24,20 +34,17 @@ async function fetchJSONData(url) {
   }
 }
 
-function renderList(listData)
-{
-  if (!listData) {
-    console.error('No data to render');
-    return;
-  }
-
+function renderList() {
   const listHeader = document.createElement('h2');
-  listHeader.textContent = listData.name;
+  listHeader.textContent = dataManager.listData.name;
 
   const listContainer = document.createElement('div');
   listContainer.classList.add('tier-list');
 
-  listData.rows.forEach(row => {
+  const rows = Array.from(dataManager.listData.rows.values())
+    .sort((a, b) => a.order - b.order);
+
+  rows.forEach(row => {
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('tier-row');
     
@@ -48,58 +55,53 @@ function renderList(listData)
 
     const rowDropBox = document.createElement('div');
     rowDropBox.classList.add('tier-drop-box');
-    rowDropBox.id = `drop-box-${row.rank}`;
+    rowDropBox.id = `drop-box-${row.id}`;
 
-    row.images.forEach(image => {
-      const imageContainer = document.createElement('div');
-      imageContainer.classList.add('draggable');
-      imageContainer.id = `img${image.id}`;
-      imageContainer.draggable = true;
-
-      const imageElement = document.createElement('img');
-      imageElement.src = image.url;
-      imageElement.alt = image.altText;
-      imageElement.draggable = false;
-
-      imageContainer.appendChild(imageElement);
+    // Get images for this row
+    const rowImages = dataManager.getRowImages(row.id);
+    rowImages.forEach(image => {
+      const imageContainer = createImageElement(image);
       rowDropBox.appendChild(imageContainer);
     });
 
     rowContainer.appendChild(rowRank);
     rowContainer.appendChild(rowDropBox);
     listContainer.appendChild(rowContainer);
-    main.appendChild(listHeader);
-    main.appendChild(listContainer);
   });
+  
+  main.appendChild(listHeader);
+  main.appendChild(listContainer);
 }
 
-function renderBackupImages(backupImages) {
-  if (!backupImages) {
-    console.error('No backup images to render');
-    return;
-  }
-
+function renderBackupImages() {
   const backupContainer = document.createElement('div');
   backupContainer.classList.add('backup-images');
 
   const dropBox = document.createElement('div');
   dropBox.classList.add('tier-drop-box');
+  dropBox.id = 'backup-drop-box';
 
+  const backupImages = dataManager.getBackupImages();
   backupImages.forEach(image => {
-    const imageContainer = document.createElement('div');
-    imageContainer.classList.add('draggable');
-    imageContainer.id = `img${image.id}`;
-    imageContainer.draggable = true;
-
-    const imageElement = document.createElement('img');
-    imageElement.src = image.url;
-    imageElement.alt = image.altText;
-    imageElement.draggable = false;
-
-    imageContainer.appendChild(imageElement);
+    const imageContainer = createImageElement(image);
     dropBox.appendChild(imageContainer);
   });
 
   backupContainer.appendChild(dropBox);
   main.appendChild(backupContainer);
+}
+
+function createImageElement(image) {
+  const imageContainer = document.createElement('div');
+  imageContainer.classList.add('draggable');
+  imageContainer.id = `img${image.id}`;
+  imageContainer.draggable = true;
+
+  const imageElement = document.createElement('img');
+  imageElement.src = image.url;
+  imageElement.alt = image.altText;
+  imageElement.draggable = false;
+
+  imageContainer.appendChild(imageElement);
+  return imageContainer;
 }
