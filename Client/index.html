@@ -11,20 +11,42 @@
         <h1>TierList</h1>
     </div>
     <div class="main">
-        
+
     </div>
     <div class="blur-overlay" id="blurOverlay"></div>
     <div class="popup" id="popup">
-        <button class="closePopupBtn" id="closePopup" onclick="closePopup()">
-            <i class="fa-solid fa-xmark fa-lg" style="color: #000000;"></i>
-        </button>
+        <div class="popup-header" id="popupHeader">
+            <button class="close-popup-btn" id="closePopup" onclick="closePopup()">
+                <i class="fa-solid fa-xmark fa-2xl"></i>
+            </button>
+        </div>
+        <div class="popup-image" id="popupImage">
+             <div class="popup-image-container">
+                
+            </div>
+        </div>
+        <div class="popup-description" id="popupDescription">
+            
+        </div>
+        <div class="popup-footer" id="popupFooter">
+            <button class="popup-btn" id="replaceBtn">
+                <i class="fas fa-sync-alt"></i> 
+                Replace Image
+            </button>
+            <button class="popup-btn" id="deleteBtn">
+                <i class="fa-solid fa-trash"></i>
+                Delete
+            </button>
+        </div> 
     </div>
-    <button id="openPopup" onclick="openPopup()">Open Popup</button>
+    
     <!--Scripts-->
-    <script src="js/node_modules/sortablejs/Sortable.min.js"></script>
     <script src="https://kit.fontawesome.com/b22b3043c0.js" crossorigin="anonymous"></script>
-    <script src="js/index.js"></script>
+    <script src="js/node_modules/sortablejs/Sortable.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@simondmc/popup-js@1.4.3/popup.min.js"></script> -->
+    <script src="js/dataManager.js"></script>
     <script src="js/drag.js"></script>
     <script src="js/popup.js"></script>
+    <script src="js/index.js"></script>
 </body>
 </html>

@@ -1,5 +1,9 @@
 const popup = document.getElementById("popup");
 const overlay = document.getElementById("blurOverlay");
+const popupImageLayer = document.getElementById("popupImage");
+const popupDescription = document.getElementById("popupDescription");
+const popupDeleteButton = document.getElementById("deleteBtn");
+let currentImageId = null;
 
 function initializePopup() {
     const draggableElements = document.querySelectorAll('.draggable');
@@ -7,39 +11,72 @@ function initializePopup() {
     draggableElements.forEach(element => {
         addOpenPopupListener(element);
     });
+
+    popupDeleteButton.addEventListener("click", deleteCurrentImage);
 }
 
-function openPopup(clickedElement) {
-    popup.classList.add("active"); 
-    overlay.classList.add("active");
+function openPopup(imageId) {
+    currentImageId = imageId;
+
+    const image = dataManager.getImage(imageId);
+
+    if (!image) {
+        console.error(`Image with ID ${imageId} not found.`);
+        return;
+    }
 
     const popupImageContainer = document.createElement('div');
     popupImageContainer.classList.add('popup-image-container');
 
-    const imageElement = clickedElement.querySelector('img');
+    const popupImage = document.createElement('img');
+    popupImage.src = image.url;
+    popupImage.alt = image.altText;
 
-    if (imageElement) {
-        const popupImage = document.createElement('img');
-        popupImage.src = imageElement.src;
-        popupImage.alt = imageElement.alt;
-        popupImage.classList.add('popup-image');
+    popupImageContainer.appendChild(popupImage);
 
-        popupImageContainer.appendChild(popupImage);
-        popup.appendChild(popupImageContainer);
-    } else {
-        console.error("No image found in the clicked element.");
-    }
+    const imageDescription = document.createElement('p');
+    imageDescription.textContent = image.note || "Image description...";
+
+    popupDescription.appendChild(imageDescription);
+    popupImageLayer.appendChild(popupImageContainer);
+
+    popup.classList.add("active"); 
+    overlay.classList.add("active");
+    body.classList.add("body-noscroll");
 }
 
 function closePopup() {
+    currentImageId = null;
+
     popup.classList.remove("active");
     overlay.classList.remove("active");
-    const popupImageContainer = popup.querySelector('.popup-image-container');
-    if (popupImageContainer) {
-        popup.removeChild(popupImageContainer);
-    }
+    popupImageLayer.innerHTML = '';
+    popupDescription.innerHTML = '';
+    body.classList.remove("body-noscroll");
 }
 
 function addOpenPopupListener(clickableElement) {
-    clickableElement.addEventListener("click", () => openPopup(clickableElement));
+    const imageId = parseInt(clickableElement.id.replace('img', ''));
+    clickableElement.addEventListener("click", () => openPopup(imageId));
+}
+
+function deleteCurrentImage() {
+  console.log(dataManager.toAPIFormat());
+  if (!currentImageId) return;
+  
+  const deleteResult = dataManager.deleteImage(currentImageId);
+  
+  if (deleteResult.success) {
+    const imageElement = document.getElementById(`img${currentImageId}`);
+    if (imageElement) {
+      imageElement.remove();
+    }
+    
+    closePopup();
+    
+    console.log(`Image ${currentImageId} deleted successfully`);
+    console.log(dataManager.toAPIFormat());
+  }
+  
+  currentImageId = null;
 }
