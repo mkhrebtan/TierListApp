@@ -59,10 +59,16 @@ class TierListDataManager {
       return null;
     }
 
-    const rowImagesIds = this.listData.rowImages.get(rowId);
-    if (!rowImagesIds) {
-      console.error(`Row with ID ${rowId} not found.`);
-      return;
+    let rowImagesIds = null;
+    if (rowId === 'backup-drop-box') {
+      rowImagesIds = Array.from(this.listData.backupImages);
+    }
+    else {
+      rowImagesIds = this.listData.rowImages.get(rowId);
+      if (!rowImagesIds) {
+        console.error(`Row with ID ${rowId} not found.`);
+        return null;
+      }
     }
 
     const rowImages = rowImagesIds.map(id => this.listData.images.get(id));
@@ -142,5 +148,16 @@ class TierListDataManager {
 
     this.listData.images.delete(imageId);
     return { success: true, message: 'Image deleted successfully' };
+  }
+
+  updateRankColor(rowId, newColorHex) {
+    const row = this.listData.rows.get(rowId);
+    if (!row) {
+      console.error(`Row with ID ${rowId} not found.`);
+      return { success: false, message: 'Row not found' };
+    }
+
+    row.colorHex = newColorHex;
+    return { success: true, message: 'Row color updated successfully' };
   }
 }

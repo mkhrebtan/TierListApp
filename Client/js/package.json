@@ -9,6 +9,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@simonwep/pickr": "^1.9.1",
     "sortablejs": "^1.15.6"
   }
 }

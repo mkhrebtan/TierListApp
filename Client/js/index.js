@@ -19,6 +19,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderBackupImages();
   initializeDragAndDrop();
   initializePopup();
+  initializeEditing();
 });
 
 async function fetchJSONData(url) {
@@ -47,11 +48,13 @@ function renderList() {
   rows.forEach(row => {
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('tier-row');
+    rowContainer.id = `row-${row.id}`;
     
     const rowRank = document.createElement('div');
     rowRank.classList.add('tier-rank');
     rowRank.textContent = row.rank;
     rowRank.style.backgroundColor = row.colorHex;
+    rowRank.contentEditable = true;
 
     const rowDropBox = document.createElement('div');
     rowDropBox.classList.add('tier-drop-box');

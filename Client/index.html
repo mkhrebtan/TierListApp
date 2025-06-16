@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>
     <title>TierList</title>
 </head>
 <body>
@@ -11,7 +12,9 @@
         <h1>TierList</h1>
     </div>
     <div class="main">
-
+        <button style="width: 100px;" id="editBtn">
+            Edit
+        </button>
     </div>
     <div class="blur-overlay" id="blurOverlay"></div>
     <div class="popup" id="popup">
@@ -39,14 +42,16 @@
             </button>
         </div> 
     </div>
-    
+
     <!--Scripts-->
     <script src="https://kit.fontawesome.com/b22b3043c0.js" crossorigin="anonymous"></script>
     <script src="js/node_modules/sortablejs/Sortable.min.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/@simondmc/popup-js@1.4.3/popup.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script src="js/dataManager.js"></script>
     <script src="js/drag.js"></script>
     <script src="js/popup.js"></script>
+    <script src="js/listEdit.js"></script>
     <script src="js/index.js"></script>
 </body>
 </html>
