@@ -19,6 +19,7 @@ function updateDataAfterDrop(evt) {
 
     const imageId = parseInt(evt.item.id.replace('img', ''));
     const newIndex = evt.newIndex;
+    const oldIndex = evt.oldIndex;
     let fromBoxId = null;
 
     if (evt.from.id === 'backup-drop-box') {
@@ -29,7 +30,7 @@ function updateDataAfterDrop(evt) {
     }
     
     if (evt.from === evt.to) {
-        dataManager.updateImageOrder(fromBoxId, imageId, newIndex);
+        dataManager.updateImageOrder(fromBoxId, imageId, oldIndex, newIndex);
     }
     else {
         let toBoxId = null;

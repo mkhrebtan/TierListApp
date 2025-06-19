@@ -1,6 +1,8 @@
 const body = document.body;
 const main = document.body.querySelector('.main');
 const dataManager = new TierListDataManager();
+let tierList = null;
+let backupImagesDropBox = null;
 
 listName = '';
 let rows = [];
@@ -41,11 +43,11 @@ function renderList() {
 
   const listContainer = document.createElement('div');
   listContainer.classList.add('tier-list');
+  listContainer.id = 'tier-list-container';
 
-  const rows = Array.from(dataManager.listData.rows.values())
-    .sort((a, b) => a.order - b.order);
+  tierList = listContainer;
 
-  rows.forEach(row => {
+  dataManager.listData.rows.forEach(row => {
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('tier-row');
     rowContainer.id = `row-${row.id}`;
@@ -54,7 +56,6 @@ function renderList() {
     rowRank.classList.add('tier-rank');
     rowRank.textContent = row.rank;
     rowRank.style.backgroundColor = row.colorHex;
-    rowRank.contentEditable = true;
 
     const rowDropBox = document.createElement('div');
     rowDropBox.classList.add('tier-drop-box');
@@ -83,6 +84,8 @@ function renderBackupImages() {
   const dropBox = document.createElement('div');
   dropBox.classList.add('tier-drop-box');
   dropBox.id = 'backup-drop-box';
+
+  backupImagesDropBox = dropBox;
 
   const backupImages = dataManager.getBackupImages();
   backupImages.forEach(image => {
