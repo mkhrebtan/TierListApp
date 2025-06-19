@@ -1,8 +1,19 @@
 const editButton = document.getElementById('editBtn');
+const undoButton = document.getElementById('undoBtn');
+const discardButton = document.getElementById('discardBtn');
 let tierListSortable = null;
+const commandManager = new CommandManager();
+let isEditingMode = false;
 
 function initializeEditing() {
     editButton.addEventListener('click', toggleEditMode);
+    setupEditingEventListeners();
+    undoButton.addEventListener('click', () => {
+        commandManager.undo();
+    });
+    discardButton.addEventListener('click', () => {
+        commandManager.discardAllChanges();
+    });
 
     const tierRows = document.querySelectorAll('.tier-row');
     tierRows.forEach(row => {
@@ -34,6 +45,7 @@ function initializeEditing() {
 
 function toggleEditMode() {
     const isEditing = editButton.classList.toggle('editing');
+    isEditingMode = isEditing;
     editButton.textContent = isEditing ? 'Save' : 'Edit';
 
     tierListSortable.option('disabled', !isEditing);
@@ -71,6 +83,19 @@ function toggleEditMode() {
             picker.classList.add('visible');
         } else {
             picker.classList.remove('visible');
+        }
+    });
+}
+
+function setupEditingEventListeners() {
+    document.addEventListener('commandStateChanged', (event) => {
+        const { canUndo, hasChanges } = event.detail;
+        
+        undoButton.disabled = !canUndo;
+        discardButton.disabled = !hasChanges;
+        
+        if (isEditingMode) {
+            editButton.textContent = hasChanges ? 'Save Changes' : 'Save';
         }
     });
 }
@@ -137,20 +162,24 @@ function createOperationContainerForRow(row) {
 }
 
 function createRow() {
-    const newRow = dataManager.addRow().row;
+    const newRow = dataManager.createRow();
+    return newRow;
+}
+
+function createRowContainer(row) {
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('tier-row');
-    rowContainer.id = `row-${newRow.id}`;
+    rowContainer.id = `row-${row.id}`;
     
     const rowRank = document.createElement('div');
     rowRank.classList.add('tier-rank');
-    rowRank.textContent = newRow.rank;
-    rowRank.style.backgroundColor = newRow.colorHex;
+    rowRank.textContent = row.rank;
+    rowRank.style.backgroundColor = row.colorHex;
     addInputEventListener(rowRank);
 
     const rowDropBox = document.createElement('div');
     rowDropBox.classList.add('tier-drop-box');
-    rowDropBox.id = `drop-box-${newRow.id}`;
+    rowDropBox.id = `drop-box-${row.id}`;
     new Sortable(rowDropBox, {
         group: 'shared',
         animation: 300,
@@ -175,14 +204,26 @@ function createRow() {
     return rowContainer;
 }
 
+function getRowIndex(htmlRow) {
+    const index = Array.from(tierList.children).indexOf(htmlRow);
+    console.log(`Row index: ${index}`);
+    return index;
+}
+
 function addRowAbove(htmlRow) {
-    const newRowContainer = createRow();
-    tierList.insertBefore(newRowContainer, htmlRow);
+    const newRow = createRow();
+    const newRowContainer = createRowContainer(newRow);
+    const rowIndex = getRowIndex(htmlRow);
+    const addRowCommand = new AddRowCommand(dataManager, tierList, newRowContainer, newRow, rowIndex);
+    commandManager.executeCommand(addRowCommand);
 }
 
 function addRowBelow(htmlRow) {
-    const newRowContainer = createRow();
-    tierList.insertBefore(newRowContainer, htmlRow.nextSibling);
+    const newRow = createRow();
+    const newRowContainer = createRowContainer(newRow);
+    const rowIndex = getRowIndex(htmlRow);
+    const addRowCommand = new AddRowCommand(dataManager, tierList, newRowContainer, newRow, rowIndex + 1);
+    commandManager.executeCommand(addRowCommand);
 }
 
 function deleteRow(htmlRow) {

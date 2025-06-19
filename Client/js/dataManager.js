@@ -172,13 +172,18 @@ class TierListDataManager {
     return { success: true, message: 'Row order updated successfully' };
   }
 
-  addRow() {
+  createRow(rank = 'New', colorHex = '#FFFFFF') {
     const newRow = {
       id: this.listData.rows.size + 1,
-      rank: 'New',
-      colorHex: '#FFFFFF',
+      rank: rank,
+      colorHex: colorHex,
       images: []
     };
+
+    return newRow;
+  }
+
+  addRow(newRow) {
     this.listData.rows.set(newRow.id, newRow);
     this.listData.rowImages.set(newRow.id, []);
     return { success: true, message: 'Row added successfully', row: newRow };

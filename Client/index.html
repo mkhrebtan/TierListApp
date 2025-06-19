@@ -15,6 +15,12 @@
         <button style="width: 100px;" id="editBtn">
             Edit
         </button>
+        <button style="width: 100px;" id="undoBtn" disabled="true">
+            Undo
+        </button>
+        <button style="width: 100px;" id="discardBtn" disabled="true">
+            Discard
+        </button>
     </div>
     <div class="blur-overlay" id="blurOverlay"></div>
     <div class="popup" id="popup">
@@ -49,6 +55,7 @@
     <!-- <script src="https://cdn.jsdelivr.net/npm/@simondmc/popup-js@1.4.3/popup.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
     <script src="js/dataManager.js"></script>
+    <script src="js/command.js"></script>
     <script src="js/drag.js"></script>
     <script src="js/popup.js"></script>
     <script src="js/listEdit.js"></script>
