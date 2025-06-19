@@ -1,19 +1,34 @@
 const editButton = document.getElementById('editBtn');
+let tierListSortable = null;
 
 function initializeEditing() {
     editButton.addEventListener('click', toggleEditMode);
 
     const tierRows = document.querySelectorAll('.tier-row');
     tierRows.forEach(row => {
-        createOperationContainerForRow(row);
-        createColorPickerForRow(row);
+        row.appendChild(createOperationContainerForRow(row));
+        row.querySelector('.tier-rank').appendChild(createColorPickerForRow(row));
     });
 
     const tierRanks = document.querySelectorAll('.tier-rank');
     tierRanks.forEach(rank => {
-        rank.addEventListener('input', () => {
-            console.log('Content updated:', rank.textContent);
-        });
+        addInputEventListener(rank);
+    });
+
+    tierListSortable = new Sortable(tierList, {
+        animation: 300,
+        ghostClass: 'sortable-ghost',
+        chosenClass: "sortable-chosen",
+        onEnd: function (evt) {
+            if (!evt.item) return;
+
+            const newIndex = evt.newIndex;
+            const oldIndex = evt.oldIndex;
+            dataManager.updateRowOrder(oldIndex, newIndex);
+            console.log(dataManager.toAPIFormat());
+            console.log('Row order updated');
+        },
+        disabled: true // Initially disabled until edit mode is activated
     });
 }
 
@@ -21,12 +36,23 @@ function toggleEditMode() {
     const isEditing = editButton.classList.toggle('editing');
     editButton.textContent = isEditing ? 'Save' : 'Edit';
 
+    tierListSortable.option('disabled', !isEditing);
+
     const draggableElements = document.querySelectorAll('.draggable');
     draggableElements.forEach(element => {
         if (isEditing) {
             element.classList.add('editing');
         } else {
             element.classList.remove('editing');
+        }
+    });
+
+    const tierRanks = document.querySelectorAll('.tier-rank');
+    tierRanks.forEach(rank => {
+        if (isEditing) {
+            rank.setAttribute('contenteditable', 'true');
+        } else {
+            rank.removeAttribute('contenteditable');
         }
     });
 
@@ -107,22 +133,68 @@ function createOperationContainerForRow(row) {
     deleteRowBtn.addEventListener('click', () => deleteRow(row));
 
     rowOperation.appendChild(operationContent);
-    row.appendChild(rowOperation);
+    return rowOperation;
 }
 
-function addRowAbove(row) {
-    // Logic to add a new row above the specified row
-    console.log('Add Row Above:', row);
+function createRow() {
+    const newRow = dataManager.addRow().row;
+    const rowContainer = document.createElement('div');
+    rowContainer.classList.add('tier-row');
+    rowContainer.id = `row-${newRow.id}`;
+    
+    const rowRank = document.createElement('div');
+    rowRank.classList.add('tier-rank');
+    rowRank.textContent = newRow.rank;
+    rowRank.style.backgroundColor = newRow.colorHex;
+    addInputEventListener(rowRank);
+
+    const rowDropBox = document.createElement('div');
+    rowDropBox.classList.add('tier-drop-box');
+    rowDropBox.id = `drop-box-${newRow.id}`;
+    new Sortable(rowDropBox, {
+        group: 'shared',
+        animation: 300,
+        ghostClass: 'sortable-ghost',
+        chosenClass: "sortable-chosen",
+        onEnd: function (evt) {
+            updateDataAfterDrop(evt);
+        }
+    });
+
+    rowContainer.appendChild(rowRank);
+    rowContainer.appendChild(rowDropBox);
+
+    const rowOperation = createOperationContainerForRow(rowContainer);
+    rowOperation.classList.add('visible');
+    const rowColorPicker = createColorPickerForRow(rowContainer);
+    rowColorPicker.classList.add('visible');
+    
+    rowContainer.appendChild(rowOperation);
+    rowRank.appendChild(rowColorPicker);
+    rowRank.setAttribute('contenteditable', 'true');
+    return rowContainer;
 }
 
-function addRowBelow(row) {
-    // Logic to add a new row below the specified row
-    console.log('Add Row Below:', row);
+function addRowAbove(htmlRow) {
+    const newRowContainer = createRow();
+    tierList.insertBefore(newRowContainer, htmlRow);
 }
 
-function deleteRow(row) {
-    // Logic to delete the specified row
-    console.log('Delete Row:', row);
+function addRowBelow(htmlRow) {
+    const newRowContainer = createRow();
+    tierList.insertBefore(newRowContainer, htmlRow.nextSibling);
+}
+
+function deleteRow(htmlRow) {
+    const rowImages = htmlRow.querySelectorAll('.draggable');
+    rowImages.forEach(image => {
+        image.parentNode.removeChild(image);
+        backupImagesDropBox.appendChild(image);
+    });
+    tierList.removeChild(htmlRow);
+
+    const rowId = parseInt(htmlRow.id.replace('row-', ''));
+    dataManager.deleteRow(rowId);
 }
 
 function createColorPickerForRow(row) {
@@ -190,5 +262,11 @@ function createColorPickerForRow(row) {
     });
 
     colorPicker.appendChild(colorPickerIcon);
-    tierRank.appendChild(colorPicker);
+    return colorPicker;
+}
+
+function addInputEventListener(tierRank) {
+    tierRank.addEventListener('input', () => {
+        console.log('Content updated:', tierRank.textContent);
+    });
 }

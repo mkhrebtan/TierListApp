@@ -21,7 +21,6 @@ class TierListDataManager {
         id: row.id,
         rank: row.rank,
         colorHex: row.colorHex,
-        order: row.order
       });
       
       // Initialize row images array
@@ -34,7 +33,6 @@ class TierListDataManager {
           url: image.url,
           altText: image.altText,
           note: image.note,
-          order: image.order
         });
         this.listData.rowImages.get(row.id).push(image.id);
       });
@@ -52,36 +50,38 @@ class TierListDataManager {
     });
   }
 
-  updateImageOrder(rowId, imageId, newIndex) {
+  updateImageOrder(rowId, imageId, oldIndex, newIndex) {
     const image = this.listData.images.get(imageId);
     if (!image) {
       console.error(`Image with ID ${imageId} not found.`);
-      return null;
+      return { success: false, message: 'Image not found' };
     }
 
     let rowImagesIds = null;
+    let inBackup = false;
     if (rowId === 'backup-drop-box') {
       rowImagesIds = Array.from(this.listData.backupImages);
+      inBackup = true;
     }
     else {
       rowImagesIds = this.listData.rowImages.get(rowId);
       if (!rowImagesIds) {
         console.error(`Row with ID ${rowId} not found.`);
-        return null;
+        return { success: false, message: 'Row not found' };
       }
     }
 
-    const rowImages = rowImagesIds.map(id => this.listData.images.get(id));
+    const [element] = rowImagesIds.splice(oldIndex, 1); 
+    rowImagesIds.splice(newIndex, 0, element);
 
-    const movedImages = rowImages.filter(image => image.order >= newIndex + 1);
-    movedImages.forEach(img => {
-      img.order += 1;
-    });
+    if (inBackup) {
+      this.listData.backupImages.clear();
+      rowImagesIds.forEach(id => this.listData.backupImages.add(id));
+    }
 
-    image.order = newIndex + 1;
+    return { success: true, message: 'Image order updated successfully' };
   }
 
-  // Image moved between rows or to/from backup
   moveImage(imageId, fromRowId, toRowId, newIndex) {
     if (fromRowId === 'backup-drop-box') {
       this.listData.backupImages.delete(imageId);
@@ -91,14 +91,17 @@ class TierListDataManager {
       if (index > -1) fromArray.splice(index, 1);
     }
     
+    let lastIndex = 0;
     if (toRowId === 'backup-drop-box') {
       this.listData.backupImages.add(imageId);
+      lastIndex = this.listData.backupImages.size - 1;
     } else {
       const toArray = this.listData.rowImages.get(toRowId);
       toArray.push(imageId);
+      lastIndex = toArray.length - 1;
     }
     
-    this.updateImageOrder(toRowId, imageId, newIndex);
+    this.updateImageOrder(toRowId, imageId, lastIndex, newIndex);
   }
 
   getRowImages(rowId) {
@@ -115,7 +118,6 @@ class TierListDataManager {
     return this.listData.images.get(imageId);
   }
 
-  // Generate API-ready data
   toAPIFormat() {
     const rows = Array.from(this.listData.rows.values()).map(row => ({
       ...row,
@@ -159,5 +161,44 @@ class TierListDataManager {
 
     row.colorHex = newColorHex;
     return { success: true, message: 'Row color updated successfully' };
+  }
+
+  updateRowOrder(oldIndex, newIndex) {
+    const rowsArray = Array.from(this.listData.rows.values());
+    const [element] = rowsArray.splice(oldIndex, 1); 
+    rowsArray.splice(newIndex, 0, element);
+    this.listData.rows.clear();
+    this.listData.rows = new Map(rowsArray.map(row => [row.id, row]));
+    return { success: true, message: 'Row order updated successfully' };
+  }
+
+  addRow() {
+    const newRow = {
+      id: this.listData.rows.size + 1,
+      rank: 'New',
+      colorHex: '#FFFFFF',
+      images: []
+    };
+    this.listData.rows.set(newRow.id, newRow);
+    this.listData.rowImages.set(newRow.id, []);
+    return { success: true, message: 'Row added successfully', row: newRow };
+  }
+
+  deleteRow(rowId) {
+    const row = this.listData.rows.get(rowId);
+    if (!row) {
+      console.error(`Row with ID ${rowId} not found.`);
+      return { success: false, message: 'Row not found' };
+    }
+
+    const imageIds = this.listData.rowImages.get(rowId) || [];
+    imageIds.forEach(imageId => {
+      this.listData.backupImages.add(imageId);
+    });
+
+    this.listData.rows.delete(rowId);
+    this.listData.rowImages.delete(rowId);
+    
+    return { success: true, message: 'Row deleted successfully' };
   }
 }
