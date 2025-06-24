@@ -54,8 +54,11 @@ function renderList() {
     
     const rowRank = document.createElement('div');
     rowRank.classList.add('tier-rank');
-    rowRank.textContent = row.rank;
     rowRank.style.backgroundColor = row.colorHex;
+
+    const rankText = document.createElement('span');
+    rankText.textContent = row.rank;
+    rowRank.appendChild(rankText);
 
     const rowDropBox = document.createElement('div');
     rowDropBox.classList.add('tier-drop-box');
@@ -110,4 +113,19 @@ function createImageElement(image) {
 
   imageContainer.appendChild(imageElement);
   return imageContainer;
+}
+
+const fileSelect = document.getElementById("fileSelect"),
+fileInput = document.getElementById("fileInput");
+
+fileInput.addEventListener("change", handleFiles, false);
+
+function handleFiles() {
+  if (this.files.length) {
+    for (const file of this.files) {
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      body.appendChild(img);
+    }
+  }
 }
