@@ -19,11 +19,10 @@ function initializeEditing() {
     tierRows.forEach(row => {
         row.appendChild(createOperationContainerForRow(row));
         row.querySelector('.tier-rank').appendChild(createColorPickerForRow(row));
-    });
 
-    const tierRanks = document.querySelectorAll('.tier-rank');
-    tierRanks.forEach(rank => {
-        addInputEventListener(rank);
+        const tierRankText = row.querySelector('.tier-rank').querySelector('span');
+        const rowId = parseInt(row.id.replace('row-', ''));
+        addInputEventListener(tierRankText, rowId);
     });
 
     tierListSortable = new Sortable(tierList, {
@@ -35,9 +34,8 @@ function initializeEditing() {
 
             const newIndex = evt.newIndex;
             const oldIndex = evt.oldIndex;
-            dataManager.updateRowOrder(oldIndex, newIndex);
-            console.log(dataManager.toAPIFormat());
-            console.log('Row order updated');
+            const changeRowOrderCommand = new ChangeRowOrderCommand(dataManager, tierList, oldIndex, newIndex);
+            commandManager.executeCommand(changeRowOrderCommand);
         },
         disabled: true // Initially disabled until edit mode is activated
     });
@@ -59,7 +57,7 @@ function toggleEditMode() {
         }
     });
 
-    const tierRanks = document.querySelectorAll('.tier-rank');
+    const tierRanks = document.querySelectorAll('.tier-rank span');
     tierRanks.forEach(rank => {
         if (isEditing) {
             rank.setAttribute('contenteditable', 'true');
@@ -173,9 +171,12 @@ function createRowContainer(row) {
     
     const rowRank = document.createElement('div');
     rowRank.classList.add('tier-rank');
-    rowRank.textContent = row.rank;
     rowRank.style.backgroundColor = row.colorHex;
-    addInputEventListener(rowRank);
+
+    const rankText = document.createElement('span');
+    rankText.textContent = row.rank;
+    rowRank.appendChild(rankText);
+    addInputEventListener(rankText, row.id);
 
     const rowDropBox = document.createElement('div');
     rowDropBox.classList.add('tier-drop-box');
@@ -227,15 +228,11 @@ function addRowBelow(htmlRow) {
 }
 
 function deleteRow(htmlRow) {
-    const rowImages = htmlRow.querySelectorAll('.draggable');
-    rowImages.forEach(image => {
-        image.parentNode.removeChild(image);
-        backupImagesDropBox.appendChild(image);
-    });
-    tierList.removeChild(htmlRow);
-
     const rowId = parseInt(htmlRow.id.replace('row-', ''));
-    dataManager.deleteRow(rowId);
+    const row = dataManager.getRow(rowId);
+    const rowIndex = getRowIndex(htmlRow);
+    const deleteRowCommand = new DeleteRowCommand(dataManager, tierList, htmlRow, row, rowIndex);
+    commandManager.executeCommand(deleteRowCommand);
 }
 
 function createColorPickerForRow(row) {
@@ -290,14 +287,14 @@ function createColorPickerForRow(row) {
     pickr.on('save', (color, instance) => {
         const hexColor = color.toHEXA().toString();
         const rowId = parseInt(row.id.replace('row-', ''));
-        if (dataManager.updateRankColor(rowId, hexColor).success) {
-            console.log(`Row color updated to ${hexColor}`);
-            tierRank.style.backgroundColor = hexColor;
-            instance.hide();
+        const rowObj = dataManager.getRow(rowId);
+        if (!rowObj) {
+            console.error(`Row with ID ${rowId} not found.`);
+            return;
         }
-        else {
-            console.error('Failed to update row color');
-        }
+        const changeRankColorCommand = new ChangeRankColorCommand(dataManager, tierRank, rowObj, hexColor);
+        commandManager.executeCommand(changeRankColorCommand);
+        instance.hide();
     }).on('cancel', (instance) => {
         instance.hide();
     });
@@ -306,8 +303,21 @@ function createColorPickerForRow(row) {
     return colorPicker;
 }
 
-function addInputEventListener(tierRank) {
+function addInputEventListener(tierRank, rowId) {
+    let timeout;
     tierRank.addEventListener('input', () => {
-        console.log('Content updated:', tierRank.textContent);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            const rowObj = dataManager.getRow(rowId);
+            if (!rowObj) {
+                console.error(`Row with ID ${rowId} not found.`);
+                return;
+            }
+
+            const newRank = tierRank.textContent.trim();
+            if (newRank === rowObj.rank) return;
+            const changeRankTextCommand = new ChangeRankTextCommand(dataManager, tierRank, rowObj, newRank);
+            commandManager.executeCommand(changeRankTextCommand);
+        }, 1);
     });
 }

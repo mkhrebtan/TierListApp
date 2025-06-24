@@ -183,9 +183,14 @@ class TierListDataManager {
     return newRow;
   }
 
-  addRow(newRow) {
+  addRow(newRow, rowIndex) {
     this.listData.rows.set(newRow.id, newRow);
     this.listData.rowImages.set(newRow.id, []);
+
+    if (rowIndex >= 0 && rowIndex < this.listData.rows.size) {
+      this.updateRowOrder(this.listData.rows.size - 1, rowIndex);
+    }
+
     return { success: true, message: 'Row added successfully', row: newRow };
   }
 
@@ -205,5 +210,20 @@ class TierListDataManager {
     this.listData.rowImages.delete(rowId);
     
     return { success: true, message: 'Row deleted successfully' };
+  }
+
+  getRow(rowId) {
+    return this.listData.rows.get(rowId);
+  }
+
+  updateRowRank(rowId, newRank) {
+    const row = this.listData.rows.get(rowId);
+    if (!row) {
+      console.error(`Row with ID ${rowId} not found.`);
+      return { success: false, message: 'Row not found' };
+    }
+
+    row.rank = newRank;
+    return { success: true, message: 'Row rank updated successfully' };
   }
 }
