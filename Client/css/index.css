@@ -37,6 +37,7 @@ body.body-noscroll {
   border-bottom: 2px solid #000000;
   min-height: 120px;
   /* max-height: 120px; */
+  position: relative;
 }
 
 .tier-list .tier-row:last-child {
@@ -87,6 +88,11 @@ body.body-noscroll {
 .tier-operation {
   display: none;
   background: black;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  height: 100%;
 }
 
 .tier-operation button {
