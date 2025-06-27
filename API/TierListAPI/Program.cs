@@ -1,13 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Scalar.AspNetCore;
-using TierList.Domain.Abstraction;
-using TierList.Domain.Entities;
-using TierList.Domain.Repos;
+using TierList.Application;
+using TierList.Application.Commands;
+using TierList.Application.Common.Enums;
+using TierList.Application.Common.Interfaces;
+using TierList.Application.Common.Models;
+using TierList.Application.Queries;
+using TierList.Application.Queries.DTOs;
 using TierList.Persistence.Postgres;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddApplicationServices();
 
 builder.Services.AddOpenApi();
 
@@ -16,7 +21,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(options => 
+    app.MapScalarApiReference(options =>
     {
         options.Title = "Tier List API";
         options.HideClientButton = true;
@@ -25,91 +30,69 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/lists", (ITierListRepository repo) =>
+app.MapGet("/lists", (ITierListService service) =>
 {
-    var lists = repo.GetAll();
-    var listsDTOs = lists.Select(l => new ReadTierListDTO
-    {
-        Id = l.Id,
-        Title = l.Title,
-        Created = l.Created,
-        LastModified = l.LastModified
-    });
-    return listsDTOs.ToList();
+    GetTierListsQuery query = new ();
+    IReadOnlyCollection<TierListBriefDTO> result = service.GetTierLists(query);
+    return TypedResults.Ok(result);
 });
 
-app.MapPost("/lists", (CreateTierListDTO list, ITierListRepository repo, IUnitOfWork uow) => 
+app.MapPost("/lists", (CreateTierListCommand request, ITierListService service) =>
 {
-    TierListEntity tierList = new()
+    TierListResult commandResult = service.CreateTierList(request);
+    if (!commandResult.IsSuccess)
     {
-        Title = list.Title,
-        Created = DateTime.UtcNow,
-        LastModified = DateTime.UtcNow
-    };
+        IResult result = commandResult.ErrorType switch
+        {
+            ErrorType.ValidationError => TypedResults.BadRequest(commandResult.ErrorMessage),
+            ErrorType.SaveDataError => Results.Problem(commandResult.ErrorMessage, statusCode: 500),
+            _ => Results.Problem("An unexpected error occurred while creating the tier list.", statusCode: 500)
+        };
+        return result;
+    }
 
-    try
-    {
-        uow.CreateTransaction();
-        
-        repo.Insert(tierList);
-
-        uow.SaveChanges();
-        uow.CommitTransaction();
-    }
-    catch (InvalidOperationException ex)
-    {
-        uow.RollbackTransaction();
-        return Results.Problem(ex.Message, statusCode: 500);
-    }
-    catch (Exception)
-    {
-        uow.RollbackTransaction();
-        return Results.Problem("An unexpected error occurred.", statusCode: 500);
-    }
-    return Results.Created($"/lists/{tierList.Id}", list);
+    return Results.Created($"/lists/{commandResult.TierListData?.Id}", commandResult.TierListData);
 });
 
-app.MapDelete("/lists/{listId}", (int listId, ITierListRepository repo, IUnitOfWork uow) =>
+app.MapDelete("/lists/{listId}", (int listId, ITierListService service) =>
 {
-    TierListEntity? listToDelete = repo.GetById(listId);
-    if (listToDelete is null)
+    TierListResult commandResult = service.DeleteTierList(new DeleteTierListCommand(listId));
+    if (!commandResult.IsSuccess)
     {
-        return Results.NotFound($"List with ID {listId} not found.");
+        IResult result = commandResult.ErrorType switch
+        {
+            ErrorType.NotFound => TypedResults.NotFound(commandResult.ErrorMessage),
+            ErrorType.ValidationError => TypedResults.BadRequest(commandResult.ErrorMessage),
+            ErrorType.SaveDataError => Results.Problem(commandResult.ErrorMessage, statusCode: 500),
+            _ => Results.Problem("An unexpected error occurred while deleting the tier list.", statusCode: 500)
+        };
+        return result;
     }
 
-    try
-    {
-        uow.CreateTransaction();
-        
-        repo.Delete(listToDelete);
-        
-        uow.SaveChanges();
-        uow.CommitTransaction();
-    }
-    catch (InvalidOperationException ex)
-    {
-        uow.RollbackTransaction();
-        return Results.Problem(ex.Message, statusCode: 500);
-    }
-    catch (Exception)
-    {
-        uow.RollbackTransaction();
-        return Results.Problem("An unexpected error occurred.", statusCode: 500);
-    }
-    return Results.Ok($"List with ID {listId} deleted successfully.");
+    return TypedResults.NoContent();
 });
 
-app.Run();
-
-class ReadTierListDTO
+app.MapPut("lists/{listId}", (int listId, UpdateTierListCommand request, ITierListService service) =>
 {
-    public int Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public DateTime Created { get; set; } = DateTime.Now;
-    public DateTime LastModified { get; set; } = DateTime.Now;
-}
+    if (listId != request.Id)
+    {
+        return TypedResults.BadRequest("List ID in the URL does not match the ID in the request body.");
+    }
 
-class CreateTierListDTO
-{
-    public string Title { get; set; } = string.Empty;
-}
+    TierListResult commandResult = service.UpdateTierList(request);
+    if (!commandResult.IsSuccess)
+    {
+        IResult result = commandResult.ErrorType switch
+        {
+            ErrorType.NotFound => TypedResults.NotFound(commandResult.ErrorMessage),
+            ErrorType.ValidationError => TypedResults.BadRequest(commandResult.ErrorMessage),
+            ErrorType.SaveDataError => Results.Problem(commandResult.ErrorMessage, statusCode: 500),
+            _ => Results.Problem("An unexpected error occurred while updating the tier list.", statusCode: 500)
+        };
+        return result;
+    }
+
+    return TypedResults.Ok(commandResult.TierListData);
+});
+
+await app.RunAsync();

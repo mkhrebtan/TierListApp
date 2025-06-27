@@ -9,11 +9,19 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.5.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.5.3" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.12.0.118525">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TierList.Domain\TierList.Domain.csproj" />
+    <ProjectReference Include="..\TierList.Application\TierList.Application.csproj" />
     <ProjectReference Include="..\TierList.Persistence.Postgres\TierList.Persistence.Postgres.csproj" />
   </ItemGroup>
 
