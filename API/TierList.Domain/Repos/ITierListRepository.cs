@@ -11,6 +11,7 @@ namespace TierList.Domain.Repos;
 public interface ITierListRepository : IRepository<TierListEntity>
 {
     IEnumerable<TierListEntity> GetAll();
+    IQueryable<TierListEntity> GetAllQueryable();
     void AddRow(TierRowEntity rowEntity);
     void DeleteRow(TierRowEntity rowEntity);
     void UpdateRow(TierRowEntity rowEntity);

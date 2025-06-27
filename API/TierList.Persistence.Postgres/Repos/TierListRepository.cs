@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
 
@@ -11,13 +11,22 @@ namespace TierList.Persistence.Postgres.Repos;
 
 public class TierListRepository : GenericRepository<TierListEntity>, ITierListRepository
 {
-    public TierListRepository(TierListDbContext context) : base(context) { }
+    public TierListRepository(TierListDbContext context)
+        : base(context)
+    {
+    }
 
     public IEnumerable<TierListEntity> GetAll()
     {
         return _context.TierLists
             .AsNoTracking()
             .ToList();
+    }
+
+    public IQueryable<TierListEntity> GetAllQueryable()
+    {
+        return _context.TierLists
+            .AsNoTracking();
     }
 
     public void AddRow(TierRowEntity rowEntity)
@@ -62,7 +71,7 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
 
     public TierImageEntity? GetImageById(int listId, int rowId, int imageId)
     {
-        return _context.TierImageContainers 
+        return _context.TierImageContainers
             .Where(r => r.TierListId == listId && r.Id == rowId)
             .SelectMany(r => r.Images)
             .AsNoTracking()
