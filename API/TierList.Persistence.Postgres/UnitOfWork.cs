@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using TierList.Domain.Abstraction;
-using TierList.Persistence.Postgres.Exceptions;
 
 namespace TierList.Persistence.Postgres;
 
@@ -58,12 +57,7 @@ internal class UnitOfWork : IUnitOfWork, IDisposable
     /// <exception cref="TransactionNotCreatedException">Thrown if no transaction has been created prior to calling this method.</exception>
     public async Task CommitTransactionAsync()
     {
-        if (_contextTransaction == null)
-        {
-            throw new TransactionNotCreatedException();
-        }
-
-        await _contextTransaction.CommitAsync();
+        await _contextTransaction!.CommitAsync();
     }
 
     /// <summary>
@@ -75,12 +69,7 @@ internal class UnitOfWork : IUnitOfWork, IDisposable
     /// <exception cref="TransactionNotCreatedException">Thrown if no transaction has been created prior to calling this method.</exception>
     public async Task RollbackTransactionAsync()
     {
-        if (_contextTransaction == null)
-        {
-            throw new TransactionNotCreatedException();
-        }
-
-        await _contextTransaction.RollbackAsync();
+        await _contextTransaction!.RollbackAsync();
         await Task.Run(() =>
         {
             _contextTransaction.Dispose();
@@ -104,7 +93,7 @@ internal class UnitOfWork : IUnitOfWork, IDisposable
         catch (DbUpdateException)
         {
             errorMessage = "An unexpected error occurred while saving changes to the database.";
-            throw new SaveChangesException(errorMessage);
+            throw new InvalidOperationException(errorMessage);
         }
     }
 
