@@ -7,10 +7,13 @@ using TierList.Application.Common.Interfaces;
 
 namespace TierList.Application.Queries.DTOs;
 
-public class TierListBriefDTO : ITierListDTO
+public class TierListDataDTO : ITierListDTO
 {
     public int Id { get; init; }
-    public required string Title { get; init; }
-    public DateTime Created { get; init; }
-    public DateTime LastModified { get; init; }
+
+    required public string Title { get; init; }
+
+    public IReadOnlyCollection<TierRowDTO> Rows { get; init; } = new List<TierRowDTO>();
+
+    public TierBackupRowDTO BackupRow { get; init; }
 }

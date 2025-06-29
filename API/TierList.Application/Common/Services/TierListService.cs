@@ -40,6 +40,16 @@ public class TierListService : ITierListService
             LastModified = DateTime.UtcNow,
         };
 
+        List<TierImageContainer> defaultContainers = new ()
+        {
+            new TierRowEntity { TierListId = tierList.Id, Rank = "A", ColorHex = "#FFBF7F", Order = 1 },
+            new TierRowEntity { TierListId = tierList.Id, Rank = "B", ColorHex = "#FFDF7F", Order = 2 },
+            new TierRowEntity { TierListId = tierList.Id, Rank = "C", ColorHex = "#FFFF7F", Order = 3 },
+            new TierBackupRowEntity { TierListId = tierList.Id },
+        };
+
+        tierList.Containers.AddRange(defaultContainers);
+
         try
         {
             _unitOfWork.CreateTransaction();
@@ -108,7 +118,7 @@ public class TierListService : ITierListService
 
     public IReadOnlyCollection<TierListBriefDTO> GetTierLists(GetTierListsQuery request)
     {
-        return _tierListRepository.GetAllQueryable()
+        return _tierListRepository.GetAll()
             .Select(tierList => new TierListBriefDTO
             {
                 Id = tierList.Id,
@@ -166,5 +176,70 @@ public class TierListService : ITierListService
                 Created = existingList.Created,
                 LastModified = existingList.LastModified,
             });
+    }
+
+    public TierListResult GetTierListData(GetTierListDataQuery request)
+    {
+        if (request.Id <= 0)
+        {
+            return TierListResult.Failure(
+                error: "Invalid list ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        TierListEntity? tierList = _tierListRepository.GetById(request.Id);
+        if (tierList is null)
+        {
+            return TierListResult.Failure(
+                error: $"List with ID {request.Id} not found.",
+                errorType: ErrorType.NotFound);
+        }
+
+        IReadOnlyCollection<TierRowDTO> listRows = _tierListRepository.GetRows(tierList.Id)
+            .Select(r => new TierRowDTO
+            {
+                Id = r.Id,
+                Rank = r.Rank,
+                ColorHex = r.ColorHex,
+                Order = r.Order,
+                Images = r.Images.Select(i => new TierImageDTO
+                {
+                    Id = i.Id,
+                    Url = i.Url,
+                    Note = i.Note,
+                    ContainerId = i.ContainerId,
+                    Order = i.Order,
+                }).OrderBy(i => i.Order).ToList().AsReadOnly(),
+            }).OrderBy(r => r.Order).ToList().AsReadOnly();
+
+        TierBackupRowEntity? listBackupRowEntity = _tierListRepository.GetBackupRow(tierList.Id);
+        if (listBackupRowEntity is null)
+        {
+            return TierListResult.Failure(
+                error: $"Backup row for list with ID {request.Id} not found.",
+                errorType: ErrorType.UnexpectedError);
+        }
+
+        TierListDataDTO tierListData = new ()
+        {
+            Id = tierList.Id,
+            Title = tierList.Title,
+            Rows = listRows,
+            BackupRow = new TierBackupRowDTO
+            {
+                Id = listBackupRowEntity.Id,
+                Images = listBackupRowEntity.Images
+                    .Select(i => new TierImageDTO
+                    {
+                        Id = i.Id,
+                        Url = i.Url,
+                        Note = i.Note,
+                        ContainerId = i.ContainerId,
+                        Order = i.Order,
+                    }).OrderBy(i => i.Order).ToList().AsReadOnly(),
+            },
+        };
+
+        return TierListResult.Success(tierListData);
     }
 }

@@ -19,4 +19,6 @@ public interface ITierListService
     IReadOnlyCollection<TierListBriefDTO> GetTierLists(GetTierListsQuery request);
 
     TierListResult UpdateTierList(UpdateTierListCommand request);
+
+    TierListResult GetTierListData(GetTierListDataQuery request);
 }
