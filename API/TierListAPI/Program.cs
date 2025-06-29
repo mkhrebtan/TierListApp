@@ -95,4 +95,23 @@ app.MapPut("lists/{listId}", (int listId, UpdateTierListCommand request, ITierLi
     return TypedResults.Ok(commandResult.TierListData);
 });
 
+app.MapGet("/lists/{listId}", (int listId, ITierListService service) =>
+{
+    GetTierListDataQuery query = new GetTierListDataQuery { Id = listId };
+    TierListResult result = service.GetTierListData(query);
+    if (!result.IsSuccess)
+    {
+        IResult errorResult = result.ErrorType switch
+        {
+            ErrorType.NotFound => TypedResults.NotFound(result.ErrorMessage),
+            ErrorType.ValidationError => TypedResults.BadRequest(result.ErrorMessage),
+            ErrorType.SaveDataError => Results.Problem(result.ErrorMessage, statusCode: 500),
+            _ => Results.Problem("An unexpected error occurred while retrieving the tier list.", statusCode: 500)
+        };
+        return errorResult;
+    }
+
+    return TypedResults.Ok(result.TierListData);
+});
+
 await app.RunAsync();
