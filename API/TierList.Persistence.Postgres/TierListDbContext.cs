@@ -18,7 +18,7 @@ public class TierListDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Database=TierList;Username=Dev;Password=Makc2006789333");
+            optionsBuilder.UseNpgsql("Host=localhost;Database=TierList;Username=efcore_migration_user;Password=_iEf#Core-Dev");
         }
 
         optionsBuilder.UseModel(CompiledModels.TierListDbContextModel.Instance);

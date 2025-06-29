@@ -2,7 +2,9 @@
 
 public class TierRowEntity : TierImageContainer
 {
-    public string? Rank { get; set; }
-    public string? ColorHex { get; set; }
-    public int? Order { get; set; }
+    required public string Rank { get; set; } = string.Empty;
+
+    required public string ColorHex { get; set; } = "#FFFFFF";
+
+    public int Order { get; set; }
 }
