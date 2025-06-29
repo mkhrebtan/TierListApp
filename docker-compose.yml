@@ -1,0 +1,20 @@
+services:
+  tierlistapi:
+    image: ${DOCKER_REGISTRY-}tierlistapi
+    container_name: tierlist.api
+    build:
+      context: .
+      dockerfile: API/TierListAPI/Dockerfile
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+
+  tierlist.database:
+    image: postgres:latest
+    container_name: tierlist.database
+    env_file: 
+      - .env
+    volumes:
+      - ${PWD}/tierlistdb-data/:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
