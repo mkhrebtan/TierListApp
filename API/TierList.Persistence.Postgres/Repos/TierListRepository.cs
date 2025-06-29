@@ -44,13 +44,23 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
         _context.TierImageContainers.Update(rowEntity);
     }
 
-    public TierListEntity? GetByIdWithAllData(int listId)
+    public IEnumerable<TierRowEntity> GetRows(int listId)
     {
-        return _context.TierLists
-            .Include(tl => tl.Containers)
-                .ThenInclude(c => c.Images)
+        return _context.TierImageContainers
+            .OfType<TierRowEntity>()
+            .Where(r => r.TierListId == listId)
+            .Include(r => r.Images)
             .AsNoTracking()
-            .SingleOrDefault(tl => tl.Id == listId);
+            .ToList();
+    }
+
+    public IQueryable<TierRowEntity> GetRowsQueryable(int listId)
+    {
+        return _context.TierImageContainers
+            .OfType<TierRowEntity>()
+            .Where(r => r.TierListId == listId)
+            .Include(r => r.Images)
+            .AsNoTracking();
     }
 
     public TierRowEntity? GetRowById(int listId, int rowId)
@@ -58,7 +68,7 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
         return _context.TierImageContainers
             .OfType<TierRowEntity>()
             .AsNoTracking()
-            .SingleOrDefault(r => r.Id == rowId && r.TierListId == listId);
+            .FirstOrDefault(r => r.Id == rowId && r.TierListId == listId);
     }
 
     public TierBackupRowEntity? GetBackupRow(int listId)
@@ -66,7 +76,24 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
        return _context.TierImageContainers
             .OfType<TierBackupRowEntity>()
             .AsNoTracking()
-            .SingleOrDefault(r => r.TierListId == listId);
+            .FirstOrDefault(r => r.TierListId == listId);
+    }
+
+    public IEnumerable<TierImageEntity> GetImages(int listId, int rowId)
+    {
+        return _context.TierImageContainers
+            .Where(r => r.TierListId == listId && r.Id == rowId)
+            .SelectMany(r => r.Images)
+            .AsNoTracking()
+            .ToList();
+    }
+
+    public IQueryable<TierImageEntity> GetImagesQueryable(int listId, int rowId)
+    {
+        return _context.TierImageContainers
+            .Where(r => r.TierListId == listId && r.Id == rowId)
+            .SelectMany(r => r.Images)
+            .AsNoTracking();
     }
 
     public TierImageEntity? GetImageById(int listId, int rowId, int imageId)
@@ -75,7 +102,7 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
             .Where(r => r.TierListId == listId && r.Id == rowId)
             .SelectMany(r => r.Images)
             .AsNoTracking()
-            .SingleOrDefault(i => i.Id == imageId);
+            .FirstOrDefault(i => i.Id == imageId);
     }
 
     public void AddImage(TierImageEntity imageEntity)

@@ -11,15 +11,32 @@ namespace TierList.Domain.Repos;
 public interface ITierListRepository : IRepository<TierListEntity>
 {
     IEnumerable<TierListEntity> GetAll();
+
     IQueryable<TierListEntity> GetAllQueryable();
+
     void AddRow(TierRowEntity rowEntity);
+
     void DeleteRow(TierRowEntity rowEntity);
+
     void UpdateRow(TierRowEntity rowEntity);
-    TierListEntity? GetByIdWithAllData(int listId);
+
+    IEnumerable<TierRowEntity> GetRows(int listId);
+
+    IQueryable<TierRowEntity> GetRowsQueryable(int listId);
+
     TierRowEntity? GetRowById(int listId, int rowId);
+
     TierBackupRowEntity? GetBackupRow(int listId);
+
+    IEnumerable<TierImageEntity> GetImages(int listId, int rowId);
+
+    IQueryable<TierImageEntity> GetImagesQueryable(int listId, int rowId);
+
     TierImageEntity? GetImageById(int listId, int rowId, int imageId);
+
     void AddImage(TierImageEntity imageEntity);
+
     void DeleteImage(TierImageEntity imageEntity);
+
     void UpdateImage(TierImageEntity imageEntity);
 }
