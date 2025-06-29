@@ -1,19 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TierList.Application.Common.Interfaces;
+﻿using TierList.Application.Common.Interfaces;
 
 namespace TierList.Application.Queries.DTOs;
 
-public class TierListDataDTO : ITierListDTO
+/// <summary>
+/// Represents the data transfer object (DTO) for a tier list, including its identifier, title, tiers, and backup row
+/// information.
+/// </summary>
+/// <remarks>This DTO is used to encapsulate the data structure of a tier list, which includes a unique
+/// identifier, a title,  a collection of tier rows, and a backup row. It is designed to be immutable and is typically
+/// used for transferring  tier list data between application layers or services.</remarks>
+public class TierListDataDto : ITierListDTO
 {
+    /// <summary>
+    /// Gets the unique identifier for the entity.
+    /// </summary>
     public int Id { get; init; }
 
+    /// <summary>
+    /// Gets the title associated with the object.
+    /// </summary>
     required public string Title { get; init; }
 
-    public IReadOnlyCollection<TierRowDTO> Rows { get; init; } = new List<TierRowDTO>();
+    /// <summary>
+    /// Gets the collection of rows representing the tiers.
+    /// </summary>
+    public IReadOnlyCollection<TierRowDto> Rows { get; init; } = new List<TierRowDto>();
 
-    public TierBackupRowDTO BackupRow { get; init; }
+    /// <summary>
+    /// Gets the backup row data associated with the tier.
+    /// </summary>
+    public TierBackupRowDto BackupRow { get; init; }
 }

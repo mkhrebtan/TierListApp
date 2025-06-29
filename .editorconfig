@@ -250,6 +250,10 @@ dotnet_diagnostic.SA1309.severity = none
 dotnet_diagnostic.SA1101.severity = none
 dotnet_diagnostic.SA1401.severity = none
 
+# IDE0022: Use block body for method
+dotnet_diagnostic.IDE0022.severity = none
+dotnet_diagnostic.SA1000.severity = none
+
 [*.{cs,vb}]
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion

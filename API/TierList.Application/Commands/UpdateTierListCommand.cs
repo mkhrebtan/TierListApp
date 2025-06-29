@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TierList.Application.Commands;
+﻿namespace TierList.Application.Commands;
 
 public record UpdateTierListCommand
 {
+    /// <summary>
+    /// Gets the unique identifier for the entity.
+    /// </summary>
     public int Id { get; init; }
 
+    /// <summary>
+    /// Gets the title associated with the object.
+    /// </summary>
     public string? Title { get; init; }
 }

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TierList.Application.Commands;
+﻿namespace TierList.Application.Commands;
 
 public record CreateTierListCommand
 {
-    public required string Title { get; init; }
+    /// <summary>
+    /// Gets the title associated with the object.
+    /// </summary>
+    required public string Title { get; init; }
 }

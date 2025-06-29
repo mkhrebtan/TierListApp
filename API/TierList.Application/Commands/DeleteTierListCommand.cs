@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TierList.Application.Commands;
 
-namespace TierList.Application.Commands;
-
-public record DeleteTierListCommand (int Id);
+public record DeleteTierListCommand
+{
+    /// <summary>
+    /// Gets the unique identifier for the entity.
+    /// </summary>
+    public int Id { get; init; }
+}

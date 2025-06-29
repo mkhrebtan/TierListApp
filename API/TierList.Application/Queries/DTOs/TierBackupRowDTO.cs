@@ -1,14 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TierList.Application.Queries.DTOs;
 
-namespace TierList.Application.Queries.DTOs;
-
-public class TierBackupRowDTO
+/// <summary>
+/// Represents a data transfer object (DTO) for a tier backup row, containing an identifier and associated images.
+/// </summary>
+public class TierBackupRowDto
 {
+    /// <summary>
+    /// Gets the unique identifier for the entity.
+    /// </summary>
     public int Id { get; init; }
 
-    public IReadOnlyCollection<TierImageDTO> Images { get; init; } = new List<TierImageDTO>();
+    /// <summary>
+    /// Gets the collection of images associated with the tier.
+    /// </summary>
+    public IReadOnlyCollection<TierImageDto> Images { get; init; } = new List<TierImageDto>();
 }
