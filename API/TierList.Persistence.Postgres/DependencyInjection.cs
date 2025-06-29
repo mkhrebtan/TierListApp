@@ -1,12 +1,12 @@
-﻿using Npgsql.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql.EntityFrameworkCore;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Repos;
 using TierList.Persistence.Postgres.Repos;

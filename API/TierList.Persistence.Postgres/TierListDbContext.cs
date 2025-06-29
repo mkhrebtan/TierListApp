@@ -7,7 +7,9 @@ namespace TierList.Persistence.Postgres;
 public class TierListDbContext : DbContext
 {
     public DbSet<TierListEntity> TierLists { get; set; }
+
     public DbSet<TierImageContainer> TierImageContainers { get; set; }
+
     public DbSet<TierImageEntity> TierImages { get; set; }
 
     public TierListDbContext() { }
@@ -16,12 +18,7 @@ public class TierListDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseNpgsql("Host=localhost;Database=TierList;Username=efcore_migration_user;Password=_iEf#Core-Dev");
-        }
-
-        optionsBuilder.UseModel(CompiledModels.TierListDbContextModel.Instance);
+        optionsBuilder.UseNpgsql();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
