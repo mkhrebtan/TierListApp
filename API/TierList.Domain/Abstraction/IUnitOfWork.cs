@@ -8,9 +8,12 @@ namespace TierList.Domain.Abstraction
 {
     public interface IUnitOfWork
     {
-        void CreateTransaction();
-        void CommitTransaction();
-        void RollbackTransaction();
-        void SaveChanges();
+        Task CreateTransactionAsync();
+
+        Task CommitTransactionAsync();
+
+        Task RollbackTransactionAsync();
+
+        Task SaveChangesAsync();
     }
 }

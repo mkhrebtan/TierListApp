@@ -6,10 +6,14 @@ using System.Threading.Tasks;
 
 namespace TierList.Domain.Abstraction;
 
-public interface IRepository<TEntity> where TEntity : IEntity
+public interface IRepository<TEntity>
+    where TEntity : IEntity
 {
-    TEntity? GetById(int id);
+    Task<TEntity?> GetByIdAsync(int id);
+
     void Insert(TEntity entity);
+
     void Update(TEntity entity);
+
     void Delete(TEntity entity);
 }

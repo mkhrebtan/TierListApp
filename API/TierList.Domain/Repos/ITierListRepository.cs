@@ -10,7 +10,7 @@ namespace TierList.Domain.Repos;
 
 public interface ITierListRepository : IRepository<TierListEntity>
 {
-    IEnumerable<TierListEntity> GetAll();
+    Task<IEnumerable<TierListEntity>> GetAllAsync();
 
     IQueryable<TierListEntity> GetAllQueryable();
 
@@ -20,19 +20,19 @@ public interface ITierListRepository : IRepository<TierListEntity>
 
     void UpdateRow(TierRowEntity rowEntity);
 
-    IEnumerable<TierRowEntity> GetRows(int listId);
+    Task<IEnumerable<TierRowEntity>> GetRowsAsync(int listId);
 
     IQueryable<TierRowEntity> GetRowsQueryable(int listId);
 
-    TierRowEntity? GetRowById(int listId, int rowId);
+    Task<TierRowEntity?> GetRowByIdAsync(int listId, int rowId);
 
-    TierBackupRowEntity? GetBackupRow(int listId);
+    Task<TierBackupRowEntity?> GetBackupRowAsync(int listId);
 
-    IEnumerable<TierImageEntity> GetImages(int listId, int rowId);
+    Task<IEnumerable<TierImageEntity>> GetImagesAsync(int listId, int rowId);
 
     IQueryable<TierImageEntity> GetImagesQueryable(int listId, int rowId);
 
-    TierImageEntity? GetImageById(int listId, int rowId, int imageId);
+    Task<TierImageEntity?> GetImageByIdAsync(int listId, int rowId, int imageId);
 
     void AddImage(TierImageEntity imageEntity);
 
