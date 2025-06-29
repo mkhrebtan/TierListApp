@@ -145,16 +145,15 @@ public class TierListService : ITierListService
     /// cref="TierListBriefDto"/> objects, each representing a brief summary of a tier list.</returns>
     public async Task<IReadOnlyCollection<TierListBriefDto>> GetTierListsAsync(GetTierListsQuery request)
     {
-        var tierListsEntities = await _tierListRepository.GetAllAsync();
-        IEnumerable<Task<TierListBriefDto>> mapListToDtoTasks = tierListsEntities
-            .Select(t => Task.Run(() => new TierListBriefDto
+        var listsEntities = await _tierListRepository.GetAllAsync();
+        return listsEntities
+            .Select(l => new TierListBriefDto
             {
-                Id = t.Id,
-                Title = t.Title,
-                Created = t.Created,
-                LastModified = t.LastModified,
-            }));
-        return (await Task.WhenAll(mapListToDtoTasks)).AsReadOnly();
+                Id = l.Id,
+                Title = l.Title,
+                Created = l.Created,
+                LastModified = l.LastModified,
+            }).ToList().AsReadOnly();
     }
 
     /// <summary>
