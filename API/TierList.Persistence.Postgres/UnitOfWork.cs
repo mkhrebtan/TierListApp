@@ -6,13 +6,20 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using TierList.Domain.Abstraction;
+using TierList.Persistence.Postgres.Exceptions;
 
 namespace TierList.Persistence.Postgres;
 
 /// <summary>
-/// Provides a Unit of Work implementation for managing database transactions and operations
-/// using Entity Framework Core with PostgreSQL as the data store.
+/// Provides a unit of work implementation for managing database transactions and saving changes within a single
+/// context. This class ensures that all operations are performed atomically and supports transaction management for
+/// consistent data operations.
 /// </summary>
+/// <remarks>The <see cref="UnitOfWork"/> class is designed to encapsulate database operations within a single
+/// transactional context. It provides methods to create, commit, and roll back transactions, as well as to save changes
+/// to the database. This implementation ensures that resources are properly disposed of when the unit of work is no
+/// longer needed.  This class is not thread-safe and should be used within a single thread or request
+/// context.</remarks>
 internal class UnitOfWork : IUnitOfWork, IDisposable
 {
     private readonly TierListDbContext _context;
@@ -22,65 +29,82 @@ internal class UnitOfWork : IUnitOfWork, IDisposable
     private IDbContextTransaction? _contextTransaction;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="UnitOfWork"/> class.
+    /// Initializes a new instance of the <see cref="UnitOfWork"/> class with the specified database context.
     /// </summary>
-    /// <param name="context">The database context to use for operations.</param>
+    /// <param name="context">The <see cref="TierListDbContext"/> instance used to manage database operations. Cannot be null.</param>
     public UnitOfWork(TierListDbContext context)
     {
         _context = context;
     }
 
     /// <summary>
-    /// Creates a new database transaction for the current unit of work.
+    /// Begins a new database transaction asynchronously.
     /// </summary>
-    public void CreateTransaction()
+    /// <remarks>This method initializes a new transaction for the current database context.  Ensure that the
+    /// transaction is committed or rolled back appropriately to avoid  leaving the database in an inconsistent
+    /// state.</remarks>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public async Task CreateTransactionAsync()
     {
-        _contextTransaction = _context.Database.BeginTransaction();
+        _contextTransaction = await _context.Database.BeginTransactionAsync();
     }
 
     /// <summary>
-    /// Commits the current database transaction.
+    /// Commits the current database transaction asynchronously.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when no transaction has been created.</exception>
-    public void CommitTransaction()
+    /// <remarks>This method finalizes the transaction, persisting all changes made during the transaction
+    /// scope. Ensure that a transaction has been created before calling this method.</remarks>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="TransactionNotCreatedException">Thrown if no transaction has been created prior to calling this method.</exception>
+    public async Task CommitTransactionAsync()
     {
-        HandleTransactionCreation();
-        _contextTransaction?.Commit();
+        if (_contextTransaction == null)
+        {
+            throw new TransactionNotCreatedException();
+        }
+
+        await _contextTransaction.CommitAsync();
     }
 
     /// <summary>
-    /// Rolls back the current database transaction and disposes of it.
+    /// Rolls back the current database transaction.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when no transaction has been created.</exception>
-    public void RollbackTransaction()
+    /// <remarks>This method reverts all changes made during the current transaction and disposes of the
+    /// transaction object. Ensure that a transaction has been created before calling this method.</remarks>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="TransactionNotCreatedException">Thrown if no transaction has been created prior to calling this method.</exception>
+    public async Task RollbackTransactionAsync()
     {
-        HandleTransactionCreation();
-        _contextTransaction?.Rollback();
-        _contextTransaction?.Dispose();
+        if (_contextTransaction == null)
+        {
+            throw new TransactionNotCreatedException();
+        }
+
+        await _contextTransaction.RollbackAsync();
+        await Task.Run(() =>
+        {
+            _contextTransaction.Dispose();
+        });
     }
 
     /// <summary>
-    /// Saves all changes made in the current context to the database.
+    /// Asynchronously saves all changes made in the current context to the database.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when a database update error occurs or an unexpected error happens during save operation.
-    /// </exception>
-    public void SaveChanges()
+    /// <remarks>This method commits all tracked changes to the underlying database. If an error occurs during
+    /// the save operation, a <see cref="SaveChangesException"/> is thrown with a descriptive error message.</remarks>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="SaveChangesException">Thrown when an error occurs while saving changes to the database.</exception>
+    public async Task SaveChangesAsync()
     {
         string errorMessage;
         try
         {
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
-        catch (DbUpdateException ex)
+        catch (DbUpdateException)
         {
-            errorMessage = "An error occurred while saving changes to the database.";
-            throw new InvalidOperationException(errorMessage, ex);
-        }
-        catch (Exception ex)
-        {
-            errorMessage = "An unexpected error occurred while saving changes.";
-            throw new InvalidOperationException(errorMessage, ex);
+            errorMessage = "An unexpected error occurred while saving changes to the database.";
+            throw new SaveChangesException(errorMessage);
         }
     }
 
@@ -105,17 +129,5 @@ internal class UnitOfWork : IUnitOfWork, IDisposable
         }
 
         _disposed = true;
-    }
-
-    /// <summary>
-    /// Validates that a transaction has been created before performing transaction operations.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when no transaction has been created.</exception>
-    private void HandleTransactionCreation()
-    {
-        if (_contextTransaction == null)
-        {
-            throw new InvalidOperationException("No transaction has been created.");
-        }
     }
 }

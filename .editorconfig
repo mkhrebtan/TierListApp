@@ -248,6 +248,7 @@ dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1200.severity = none
 dotnet_diagnostic.SA1309.severity = none
 dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1401.severity = none
 
 [*.{cs,vb}]
 dotnet_style_coalesce_expression = true:suggestion
