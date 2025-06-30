@@ -402,3 +402,4 @@ Thumbs.db
 /API/TierListAPI/appsettings.Development.json
 /.env
 /.editorconfig
+/API/TierListAPI/appsettings.json
