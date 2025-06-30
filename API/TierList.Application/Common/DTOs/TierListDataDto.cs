@@ -1,6 +1,6 @@
 ﻿using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Queries.DTOs;
+namespace TierList.Application.Common.DTOs;
 
 /// <summary>
 /// Represents the data transfer object (DTO) for a tier list, including its identifier, title, tiers, and backup row
@@ -9,7 +9,7 @@ namespace TierList.Application.Queries.DTOs;
 /// <remarks>This DTO is used to encapsulate the data structure of a tier list, which includes a unique
 /// identifier, a title,  a collection of tier rows, and a backup row. It is designed to be immutable and is typically
 /// used for transferring  tier list data between application layers or services.</remarks>
-public class TierListDataDto : ITierListDTO
+public class TierListDataDto : ITierListDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

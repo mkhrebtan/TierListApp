@@ -1,4 +1,4 @@
-﻿namespace TierList.Application.Commands;
+﻿namespace TierList.Application.Commands.TierList;
 
 public record DeleteTierListCommand
 {

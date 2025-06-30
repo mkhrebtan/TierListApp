@@ -1,13 +1,13 @@
 ﻿using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Queries.DTOs;
+namespace TierList.Application.Common.DTOs;
 
 /// <summary>
 /// Represents a brief summary of a tier list, including its identifier, title, and timestamps.
 /// </summary>
 /// <remarks>This DTO is intended for scenarios where only a high-level overview of a tier list is required, such
 /// as displaying a list of tier lists without their full details.</remarks>
-public class TierListBriefDto : ITierListDTO
+public class TierListBriefDto : ITierListDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

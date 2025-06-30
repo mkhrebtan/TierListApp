@@ -1,4 +1,4 @@
-﻿namespace TierList.Application.Queries.DTOs;
+﻿namespace TierList.Application.Common.DTOs;
 
 /// <summary>
 /// Represents a data transfer object for a tier row, containing information such as rank, color, order, and associated
