@@ -73,15 +73,12 @@ public interface ITierListRepository : IRepository<TierListEntity>
     IQueryable<TierRowEntity> GetRowsQueryable(int listId);
 
     /// <summary>
-    /// Asynchronously retrieves a row entity by its unique identifiers.
+    /// Asynchronously retrieves a row entity by its unique identifier.
     /// </summary>
-    /// <remarks>Use this method to retrieve a specific row entity from a list by providing its unique
-    /// identifiers.  Ensure that the identifiers are valid and correspond to an existing row.</remarks>
-    /// <param name="listId">The identifier of the list containing the row.</param>
-    /// <param name="rowId">The identifier of the row to retrieve.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the  <see cref="TierRowEntity"/> if
-    /// found; otherwise, <see langword="null"/>.</returns>
-    Task<TierRowEntity?> GetRowByIdAsync(int listId, int rowId);
+    /// <param name="rowId">The unique identifier of the row to retrieve. Must be a non-negative integer.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the <see cref="TierRowEntity"/> if a
+    /// row with the specified identifier exists; otherwise, <see langword="null"/>.</returns>
+    Task<TierRowEntity?> GetRowByIdAsync(int rowId);
 
     /// <summary>
     /// Retrieves a backup row entity for the specified list ID.
@@ -92,39 +89,38 @@ public interface ITierListRepository : IRepository<TierListEntity>
     Task<TierBackupRowEntity?> GetBackupRowAsync(int listId);
 
     /// <summary>
-    /// Asynchronously retrieves a collection of images associated with the specified list and row identifiers.
+    /// Asynchronously retrieves a collection of images associated with the specified row ID.
     /// </summary>
-    /// <remarks>Use this method to retrieve images tied to a specific list and row. Ensure that the provided
-    /// identifiers are valid and correspond to existing data.</remarks>
-    /// <param name="listId">The unique identifier of the list containing the images.</param>
-    /// <param name="rowId">The unique identifier of the row within the list for which images are retrieved.</param>
+    /// <param name="rowId">The unique identifier of the row for which images are to be retrieved. Must be a positive integer.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
-    /// <see cref="TierImageEntity"/> objects representing the images associated with the specified list and row.</returns>
-    Task<IEnumerable<TierImageEntity>> GetImagesAsync(int listId, int rowId);
+    /// <see cref="TierImageEntity"/> objects representing the images associated with the specified row.  If no images
+    /// are found, the collection will be empty.</returns>
+    Task<IEnumerable<TierImageEntity>> GetImagesAsync(int rowId);
 
     /// <summary>
-    /// Retrieves a queryable collection of tier images associated with the specified list and row identifiers.
+    /// Retrieves a queryable collection of image entities associated with the specified row ID.
     /// </summary>
-    /// <remarks>This method does not execute the query immediately. The returned <see cref="IQueryable{T}"/>
-    /// allows deferred execution, enabling additional filtering, sorting, or projection before the query is
-    /// executed.</remarks>
-    /// <param name="listId">The identifier of the list to which the images belong. Must be a valid, non-negative integer.</param>
-    /// <param name="rowId">The identifier of the row within the list to which the images belong. Must be a valid, non-negative integer.</param>
-    /// <returns>An <see cref="IQueryable{T}"/> of <see cref="TierImageEntity"/> representing the images associated with the
-    /// specified list and row. The result can be further filtered or queried using LINQ.</returns>
-    IQueryable<TierImageEntity> GetImagesQueryable(int listId, int rowId);
+    /// <param name="rowId">The unique identifier of the row for which the image entities are to be retrieved. Must be a positive integer.</param>
+    /// <returns>An <see cref="IQueryable{T}"/> of <see cref="TierImageEntity"/> objects representing the images associated with
+    /// the specified row ID.</returns>
+    IQueryable<TierImageEntity> GetImagesQueryable(int rowId);
 
     /// <summary>
-    /// Retrieves an image entity by its unique identifiers within a specific list and row.
+    /// Retrieves an image entity by its unique identifier.
     /// </summary>
-    /// <remarks>Use this method to retrieve a specific image entity when you know its list, row, and image
-    /// identifiers.</remarks>
-    /// <param name="listId">The identifier of the list containing the image.</param>
-    /// <param name="rowId">The identifier of the row within the list where the image is located.</param>
-    /// <param name="imageId">The unique identifier of the image to retrieve.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the  <see cref="TierImageEntity"/>
-    /// if found; otherwise, <see langword="null"/>.</returns>
-    Task<TierImageEntity?> GetImageByIdAsync(int listId, int rowId, int imageId);
+    /// <param name="imageId">The unique identifier of the image to retrieve. Must be a positive integer.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the <see cref="TierImageEntity"/> if
+    /// an image with the specified identifier exists; otherwise, <see langword="null"/>.</returns>
+    Task<TierImageEntity?> GetImageByIdAsync(int imageId);
+
+    /// <summary>
+    /// Retrieves a tier image entity associated with the specified storage key.
+    /// </summary>
+    /// <remarks>This method performs an asynchronous operation to fetch the image entity.  Ensure the
+    /// provided <paramref name="key"/> is valid and corresponds to an existing image.</remarks>
+    /// <param name="key">The unique identifier of the storage key used to locate the image.</param>
+    /// <returns>A <see cref="TierImageEntity"/> object if an image is found; otherwise, <see langword="null"/>.</returns>
+    Task<TierImageEntity?> GetImageByStorageKeyAsync(Guid key);
 
     /// <summary>
     /// Adds a new image to the collection.

@@ -116,19 +116,18 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
     }
 
     /// <summary>
-    /// Retrieves a tier row entity by its unique identifier and associated tier list identifier.
+    /// Retrieves a <see cref="TierRowEntity"/> from the database by its unique identifier.
     /// </summary>
-    /// <remarks>The returned entity is not tracked by the context. Use this method when read-only access to
-    /// the row is sufficient.</remarks>
-    /// <param name="listId">The identifier of the tier list to which the row belongs.</param>
+    /// <remarks>The returned entity is not tracked by the database context. Use this method when you need a
+    /// read-only representation of the row.</remarks>
     /// <param name="rowId">The unique identifier of the row to retrieve.</param>
-    /// <returns>A <see cref="TierRowEntity"/> representing the row if found; otherwise, <see langword="null"/>.</returns>
-    public async Task<TierRowEntity?> GetRowByIdAsync(int listId, int rowId)
+    /// <returns>A <see cref="TierRowEntity"/> if a matching row is found; otherwise, <see langword="null"/>.</returns>
+    public async Task<TierRowEntity?> GetRowByIdAsync(int rowId)
     {
         return await _context.TierImageContainers
             .OfType<TierRowEntity>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Id == rowId && r.TierListId == listId);
+            .FirstOrDefaultAsync(r => r.Id == rowId);
     }
 
     /// <summary>
@@ -149,55 +148,55 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
     }
 
     /// <summary>
-    /// Asynchronously retrieves a collection of images associated with the specified list and row identifiers.
+    /// Asynchronously retrieves a collection of images associated with the specified row ID.
     /// </summary>
-    /// <remarks>The method performs a query on the database to retrieve images associated with the specified
-    /// tier list and row. The results are returned as a read-only collection and are not tracked by the Entity
-    /// Framework change tracker.</remarks>
-    /// <param name="listId">The identifier of the tier list to filter the images by.</param>
-    /// <param name="rowId">The identifier of the row within the tier list to filter the images by.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
-    /// <see cref="TierImageEntity"/> objects representing the images associated with the specified list and row.</returns>
-    public async Task<IEnumerable<TierImageEntity>> GetImagesAsync(int listId, int rowId)
+    /// <param name="rowId">The unique identifier of the row whose associated images are to be retrieved.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an  IEnumerable{T} of
+    /// TierImageEntity objects representing the images  associated with the specified row ID. If no images are found,
+    /// the result is an empty collection.</returns>
+    public async Task<IEnumerable<TierImageEntity>> GetImagesAsync(int rowId)
     {
-        return await _context.TierImageContainers
-            .Where(r => r.TierListId == listId && r.Id == rowId)
-            .SelectMany(r => r.Images)
+        return await _context.TierImages
+            .Where(i => i.ContainerId == rowId)
             .AsNoTracking()
             .ToListAsync();
     }
 
     /// <summary>
-    /// Retrieves a queryable collection of images associated with a specific list and row.
+    /// Retrieves a queryable collection of tier images associated with the specified container ID.
     /// </summary>
-    /// <param name="listId">The identifier of the list to which the images belong.</param>
-    /// <param name="rowId">The identifier of the row within the list to which the images belong.</param>
-    /// <returns>An <see cref="IQueryable{T}"/> of <see cref="TierImageEntity"/> representing the images associated with the
-    /// specified list and row. The query is executed without tracking changes.</returns>
-    public IQueryable<TierImageEntity> GetImagesQueryable(int listId, int rowId)
+    /// <param name="rowId">The ID of the container whose associated tier images are to be retrieved.</param>
+    /// <returns>An <see cref="IQueryable{T}"/> of <see cref="TierImageEntity"/> representing the tier images  associated with
+    /// the specified container ID. The query is configured for no tracking.</returns>
+    public IQueryable<TierImageEntity> GetImagesQueryable(int rowId)
     {
-        return _context.TierImageContainers
-            .Where(r => r.TierListId == listId && r.Id == rowId)
-            .SelectMany(r => r.Images)
+        return _context.TierImages
+            .Where(i => i.ContainerId == rowId)
             .AsNoTracking();
     }
 
     /// <summary>
-    /// Retrieves a specific image entity by its unique identifier within a tier list and row.
+    /// Asynchronously retrieves a tier image entity by its unique identifier.
     /// </summary>
-    /// <remarks>This method performs a query to locate the image within the specified tier list and row. The
-    /// query is executed with no tracking to optimize read-only operations.</remarks>
-    /// <param name="listId">The identifier of the tier list containing the image.</param>
-    /// <param name="rowId">The identifier of the row within the tier list that contains the image.</param>
     /// <param name="imageId">The unique identifier of the image to retrieve.</param>
-    /// <returns>A <see cref="TierImageEntity"/> representing the image if found; otherwise, <see langword="null"/>.</returns>
-    public async Task<TierImageEntity?> GetImageByIdAsync(int listId, int rowId, int imageId)
+    /// <returns>A task that represents the asynchronous operation. The task result contains the  <see cref="TierImageEntity"/>
+    /// if found; otherwise, <see langword="null"/>.</returns>
+    public async Task<TierImageEntity?> GetImageByIdAsync(int imageId)
     {
-        return await _context.TierImageContainers
-            .Where(r => r.TierListId == listId && r.Id == rowId)
-            .SelectMany(r => r.Images)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Id == imageId);
+        return await _context.TierImages.FindAsync(imageId);
+    }
+
+    /// <summary>
+    /// Retrieves a tier image entity based on the specified storage key.
+    /// </summary>
+    /// <remarks>This method performs a query on the database to locate an image associated with the given
+    /// storage key. The query is executed with no tracking to improve performance for read-only operations.</remarks>
+    /// <param name="key">The unique identifier of the storage key associated with the image.</param>
+    /// <returns>A <see cref="TierImageEntity"/> object if an image with the specified storage key is found;  otherwise, <see
+    /// langword="null"/>.</returns>
+    public async Task<TierImageEntity?> GetImageByStorageKeyAsync(Guid key)
+    {
+        return await _context.TierImages.FirstOrDefaultAsync(i => i.StorageKey == key);
     }
 
     /// <summary>
