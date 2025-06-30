@@ -1,9 +1,9 @@
-﻿using TierList.Application.Commands;
+﻿using TierList.Application.Commands.TierList;
+using TierList.Application.Common.DTOs;
 using TierList.Application.Common.Enums;
 using TierList.Application.Common.Interfaces;
 using TierList.Application.Common.Models;
 using TierList.Application.Queries;
-using TierList.Application.Queries.DTOs;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
@@ -23,16 +23,18 @@ public class TierListService : ITierListService
 {
     private readonly ITierListRepository _tierListRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IImageStorageService _imageStorageService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TierListService"/> class.
     /// </summary>
     /// <param name="tierListRepository">The repository used to manage tier list data. This parameter cannot be null.</param>
     /// <param name="unitOfWork">The unit of work instance used to manage transactional operations. This parameter cannot be null.</param>
-    public TierListService(ITierListRepository tierListRepository, IUnitOfWork unitOfWork)
+    public TierListService(ITierListRepository tierListRepository, IUnitOfWork unitOfWork, IImageStorageService imageStorageService)
     {
         _tierListRepository = tierListRepository;
         _unitOfWork = unitOfWork;
+        _imageStorageService = imageStorageService;
     }
 
     /// <summary>
@@ -272,7 +274,7 @@ public class TierListService : ITierListService
                     rowImages.Add(new TierImageDto
                     {
                         Id = image.Id,
-                        Url = image.Url,
+                        Url = image.StorageKey.ToString(),
                         Note = image.Note,
                         ContainerId = image.ContainerId,
                         Order = image.Order,
@@ -305,7 +307,7 @@ public class TierListService : ITierListService
                 backupImages.Add(new TierImageDto
                 {
                     Id = image.Id,
-                    Url = image.Url,
+                    Url = image.StorageKey.ToString(),
                     Note = image.Note,
                     ContainerId = image.ContainerId,
                     Order = image.Order,
@@ -320,5 +322,31 @@ public class TierListService : ITierListService
             Id = backupRowEntity.Id,
             Images = backupImages.AsReadOnly(),
         };
+    }
+
+    public async Task<TierImageResult> GetImageUploadUrlAsync(GetTierImageUploadUrlQuery request)
+    {
+        if (string.IsNullOrEmpty(request.FileName))
+        {
+            return TierImageResult.Failure("File name cannot be empty.", ErrorType.ValidationError);
+        }
+
+        return await _imageStorageService.GetImageUploadUrlAsync(request.FileName);
+    }
+
+    public async Task<TierImageResult> GetImageDownloadUrlAsync(GetTierImageDownloadUrlQuery request)
+    {
+        if (request.StorageKey.Equals(Guid.Empty))
+        {
+            return TierImageResult.Failure("Storage key cannot be empty.", ErrorType.ValidationError);
+        }
+
+        TierImageEntity? imageEntity = await _tierListRepository.GetImageByStorageKeyAsync(request.StorageKey);
+        if (imageEntity is null)
+        {
+            return TierImageResult.Failure($"Image with ID {request.StorageKey} not found.", ErrorType.NotFound);
+        }
+
+        return await _imageStorageService.GetImageDownloadUrlAsync(request.StorageKey);
     }
 }

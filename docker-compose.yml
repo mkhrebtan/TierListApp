@@ -2,12 +2,16 @@ services:
   tierlistapi:
     image: ${DOCKER_REGISTRY-}tierlistapi
     container_name: tierlist.api
+    env_file: 
+      - .env
     build:
       context: .
       dockerfile: API/TierListAPI/Dockerfile
     ports:
       - "5000:5000"
       - "5001:5001"
+    networks:
+      - tierlist-net
 
   tierlist.database:
     image: postgres:latest
@@ -18,3 +22,10 @@ services:
       - ${PWD}/tierlistdb-data/:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
+    networks:
+      - tierlist-net
+
+networks:
+  tierlist-net:
+    driver: bridge
+    external: true

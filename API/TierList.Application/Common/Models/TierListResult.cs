@@ -23,7 +23,7 @@ public record TierListResult
     /// <summary>
     /// Gets the tier list data associated with the current instance.
     /// </summary>
-    public ITierListDTO? TierListData { get; init; }
+    public ITierListDto? TierListData { get; init; }
 
     /// <summary>
     /// Creates a successful result for a tier list operation.
@@ -31,7 +31,7 @@ public record TierListResult
     /// <param name="data">The tier list data associated with the successful result. This parameter is optional and can be null.</param>
     /// <returns>A <see cref="TierListResult"/> instance representing a successful operation, with the specified tier list data
     /// if provided.</returns>
-    public static TierListResult Success(ITierListDTO? data = null) => new() { IsSuccess = true, TierListData = data ?? null };
+    public static TierListResult Success(ITierListDto? data = null) => new() { IsSuccess = true, TierListData = data ?? null };
 
     /// <summary>
     /// Creates a failed result with the specified error message and error type.

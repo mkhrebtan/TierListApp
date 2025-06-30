@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TierList.Application\TierList.Application.csproj" />
+    <ProjectReference Include="..\TierList.Infrastructure\TierList.Infrastructure.csproj" />
     <ProjectReference Include="..\TierList.Persistence.Postgres\TierList.Persistence.Postgres.csproj" />
   </ItemGroup>
 

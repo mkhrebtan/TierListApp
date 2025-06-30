@@ -1,7 +1,7 @@
-﻿using TierList.Application.Commands;
+﻿using TierList.Application.Commands.TierList;
+using TierList.Application.Common.DTOs;
 using TierList.Application.Common.Models;
 using TierList.Application.Queries;
-using TierList.Application.Queries.DTOs;
 
 namespace TierList.Application.Common.Interfaces;
 
@@ -61,4 +61,8 @@ public interface ITierListService
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="TierListResult"/>
     /// object with the retrieved tier list data.</returns>
     Task<TierListResult> GetTierListDataAsync(GetTierListDataQuery request);
+
+    Task<TierImageResult> GetImageUploadUrlAsync(GetTierImageUploadUrlQuery request);
+
+    Task<TierImageResult> GetImageDownloadUrlAsync(GetTierImageDownloadUrlQuery request);
 }

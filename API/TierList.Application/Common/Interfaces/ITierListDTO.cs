@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a data transfer object (DTO) for a tier list, containing its unique identifier and title.
 /// </summary>
-public interface ITierListDTO
+public interface ITierListDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.
