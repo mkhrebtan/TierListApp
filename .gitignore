@@ -363,3 +363,40 @@ MigrationBackup/
 FodyWeavers.xsd
 
 data
+/.env
+/.editorconfig
+
+.env
+*.env
+appsettings.json
+appsettings.*.json
+
+# User secrets
+**/Properties/launchSettings.json
+
+# Build results
+**/bin/
+**/obj/
+**/out/
+
+# Visual Studio files
+.vs/
+**/.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Database
+**/tierlistdb-data/
+
+# Logs
+**/logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+/API/TierListAPI/appsettings.json
+/API/TierListAPI/appsettings.Development.json
+/API/TierListAPI/appsettings.Development.json
+/API/TierListAPI/appsettings.Development.json

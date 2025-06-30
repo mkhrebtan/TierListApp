@@ -274,7 +274,8 @@ public class TierListService : ITierListService
                     rowImages.Add(new TierImageDto
                     {
                         Id = image.Id,
-                        Url = image.StorageKey.ToString(),
+                        StorageKey = image.StorageKey,
+                        Url = string.Empty,
                         Note = image.Note,
                         ContainerId = image.ContainerId,
                         Order = image.Order,
