@@ -13,6 +13,16 @@ namespace TierList.Persistence.Postgres;
 public class TierListDbContext : DbContext
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="TierListDbContext"/> class.
+    /// </summary>
+    /// <remarks>This constructor creates a new instance of the database context, which is typically used to
+    /// interact with the underlying database. Use this constructor when configuring the context with default
+    /// options.</remarks>
+    public TierListDbContext()
+    {
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TierListDbContext"/> class with the specified options.
     /// </summary>
     /// <remarks>Use this constructor to configure and initialize the <see cref="TierListDbContext"/> with the
@@ -54,5 +64,18 @@ public class TierListDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TierImageEntityConfiguration());
 
         base.OnModelCreating(modelBuilder);
+    }
+
+    /// <summary>
+    /// Configures the database context options for this instance.
+    /// </summary>
+    /// <remarks>This method is called during the initialization of the database context to configure options
+    /// such as the database provider. By default, this implementation configures the context to use the PostgreSQL
+    /// database provider.</remarks>
+    /// <param name="optionsBuilder">A builder used to configure the database context options. This parameter cannot be null.</param>
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseNpgsql();
+        base.OnConfiguring(optionsBuilder);
     }
 }

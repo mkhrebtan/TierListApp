@@ -5,7 +5,7 @@ namespace TierList.Domain.Entities;
 /// <summary>
 /// Represents an image entity associated with a specific tier, including its metadata and relationship to a container.
 /// </summary>
-/// <remarks>This entity is typically used to store information about images, such as their URL, display order,
+/// <remarks>This entity is typically used to store information about images, such as their storage key, display order,
 /// and optional notes. It also includes a reference to the container that groups related images.</remarks>
 public class TierImageEntity : IEntity
 {
@@ -13,9 +13,9 @@ public class TierImageEntity : IEntity
     public int Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the URL associated with the current instance.
+    /// Gets or sets the unique identifier used as the storage key.
     /// </summary>
-    required public string Url { get; set; }
+    public Guid StorageKey { get; set; }
 
     /// <summary>
     /// Gets or sets the order in which this item should be processed or displayed.

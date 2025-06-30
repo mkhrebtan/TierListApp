@@ -28,11 +28,11 @@ internal class TierImageEntityConfiguration : IEntityTypeConfiguration<TierImage
         builder.Property(i => i.Id)
             .ValueGeneratedOnAdd();
 
-        builder.Property(i => i.Url)
+        builder.Property(i => i.StorageKey)
             .IsRequired();
 
         builder.Property(i => i.Note)
-            .HasDefaultValue(String.Empty);
+            .HasDefaultValue(string.Empty);
 
         builder.HasOne(i => i.Container)
             .WithMany(c => c.Images)
