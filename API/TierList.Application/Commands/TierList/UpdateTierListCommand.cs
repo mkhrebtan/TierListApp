@@ -5,7 +5,7 @@ public record UpdateTierListCommand
     /// <summary>
     /// Gets the unique identifier for the entity.
     /// </summary>
-    public int Id { get; init; }
+    required public int Id { get; init; }
 
     /// <summary>
     /// Gets the title associated with the object.
