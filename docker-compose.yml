@@ -19,7 +19,7 @@ services:
     env_file: 
       - .env
     volumes:
-      - ${PWD}/tierlistdb-data/:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
     networks:
@@ -29,3 +29,6 @@ networks:
   tierlist-net:
     driver: bridge
     external: true
+
+volumes:
+  postgres_data:
