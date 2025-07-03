@@ -20,32 +20,7 @@ public class StorageService : IImageStorageService
         _s3Settings = s3Settings;
     }
 
-    public async Task<TierImageResult> GetImageDownloadUrlAsync(Guid key)
-    {
-        try
-        {
-            var request = new GetPreSignedUrlRequest
-            {
-                BucketName = _s3Settings.Value.BucketName,
-                Key = $"images/{key}",
-                Verb = HttpVerb.GET,
-                Expires = DateTime.UtcNow.AddMinutes(5),
-            };
-
-            string url = await _s3Client.GetPreSignedURLAsync(request);
-            return TierImageResult.Success(new TierImageBriefDto
-            {
-                Url = url,
-                StorageKey = key,
-            });
-        }
-        catch (AmazonS3Exception ex)
-        {
-            return TierImageResult.Failure(ex.Message, ErrorType.UnexpectedError);
-        }
-    }
-
-    public async Task<TierImageResult> GetImageUploadUrlAsync(string fileName)
+    public async Task<TierImageResult> GetImageUploadUrlAsync(string fileName, string contentType)
     {
         try
         {
@@ -55,7 +30,8 @@ public class StorageService : IImageStorageService
                 BucketName = _s3Settings.Value.BucketName,
                 Key = $"images/{key}",
                 Verb = HttpVerb.PUT,
-                Expires = DateTime.UtcNow.AddMinutes(5),
+                Expires = DateTime.Now.AddHours(5),
+                ContentType = contentType,
                 Metadata =
                 {
                     ["file-name"] = fileName,
@@ -63,6 +39,7 @@ public class StorageService : IImageStorageService
             };
 
             string url = await _s3Client.GetPreSignedURLAsync(request);
+
             return TierImageResult.Success(new TierImageBriefDto
             {
                 Url = url,

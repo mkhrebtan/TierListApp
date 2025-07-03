@@ -1,4 +1,5 @@
-﻿using Amazon.S3;
+﻿using Amazon;
+using Amazon.S3;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.Configure<S3Settings>(options =>
         {
             options.BucketName = config.GetSection(S3Settings.SectionName)[nameof(S3Settings.BucketName)];
+            options.Region = config.GetSection(S3Settings.SectionName)[nameof(S3Settings.Region)];
         });
         services.AddDefaultAWSOptions(config.GetAWSOptions());
         services.AddAWSService<IAmazonS3>();
