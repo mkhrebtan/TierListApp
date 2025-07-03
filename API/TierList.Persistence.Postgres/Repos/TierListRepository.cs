@@ -82,6 +82,36 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
     }
 
     /// <summary>
+    /// Asynchronously retrieves a <see cref="TierImageContainer"/> by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the container to retrieve. Must be a positive integer.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the  <see
+    /// cref="TierImageContainer"/> if found; otherwise, <see langword="null"/>.</returns>
+    public async Task<TierImageContainer?> GetContainerByIdAsync(int id)
+    {
+        return await _context.TierImageContainers
+            .FindAsync(id);
+    }
+
+    /// <summary>
+    /// Asynchronously retrieves all rows associated with the specified tier list ID.
+    /// </summary>
+    /// <remarks>The returned rows are retrieved without tracking, meaning changes to the entities will not
+    /// be tracked by the context.</remarks>
+    /// <param name="listId">The unique identifier of the tier list whose rows are to be retrieved.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an  IEnumerable{T} of TierRowEntity
+    /// objects representing the rows  associated with the specified tier list. If no rows are found, the result is an
+    /// empty collection.</returns>
+    public async Task<IEnumerable<TierRowEntity>> GetRowsAsync(int listId)
+    {
+        return await _context.TierImageContainers
+            .OfType<TierRowEntity>()
+            .Where(r => r.TierListId == listId)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Asynchronously retrieves all tier row entities associated with the specified tier list ID.
     /// </summary>
     /// <remarks>The returned entities include their associated images and are retrieved with no tracking
@@ -90,7 +120,7 @@ public class TierListRepository : GenericRepository<TierListEntity>, ITierListRe
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
     /// <see cref="TierRowEntity"/> objects, each representing a row in the specified tier list. The collection will be
     /// empty if no rows are found.</returns>
-    public async Task<IEnumerable<TierRowEntity>> GetRowsAsync(int listId)
+    public async Task<IEnumerable<TierRowEntity>> GetRowsWithImagesAsync(int listId)
     {
         return await _context.TierImageContainers
             .OfType<TierRowEntity>()

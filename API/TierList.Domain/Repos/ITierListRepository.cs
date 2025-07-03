@@ -56,6 +56,14 @@ public interface ITierListRepository : IRepository<TierListEntity>
     void UpdateRow(TierRowEntity rowEntity);
 
     /// <summary>
+    /// Asynchronously retrieves a container by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the container to retrieve. Must be a non-negative integer.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the  <see
+    /// cref="TierImageContainer"/> if found; otherwise, <see langword="null"/>.</returns>
+    Task<TierImageContainer?> GetContainerByIdAsync(int id);
+
+    /// <summary>
     /// Asynchronously retrieves a collection of rows associated with the specified list identifier.
     /// </summary>
     /// <param name="listId">The unique identifier of the list whose rows are to be retrieved. Must be a positive integer.</param>
@@ -63,6 +71,15 @@ public interface ITierListRepository : IRepository<TierListEntity>
     /// <see cref="TierRowEntity"/> objects representing the rows in the specified list. If no rows are found, the
     /// result will be an empty collection.</returns>
     Task<IEnumerable<TierRowEntity>> GetRowsAsync(int listId);
+
+    /// <summary>
+    /// Asynchronously retrieves a collection of rows that contain images for the specified list.
+    /// </summary>
+    /// <param name="listId">The unique identifier of the list for which rows with images should be retrieved. Must be a positive integer.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
+    /// <see cref="TierRowEntity"/> objects, where each object represents a row containing an image. Returns an empty
+    /// collection if no rows with images are found.</returns>
+    Task<IEnumerable<TierRowEntity>> GetRowsWithImagesAsync(int listId);
 
     /// <summary>
     /// Retrieves a queryable collection of rows associated with the specified list ID.
