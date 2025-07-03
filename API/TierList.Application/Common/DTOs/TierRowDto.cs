@@ -1,4 +1,6 @@
-﻿namespace TierList.Application.Common.DTOs;
+﻿using TierList.Application.Common.Interfaces;
+
+namespace TierList.Application.Common.DTOs;
 
 /// <summary>
 /// Represents a data transfer object for a tier row, containing information such as rank, color, order, and associated
@@ -7,7 +9,7 @@
 /// <remarks>This class is typically used to encapsulate tier-related data for transfer between application layers
 /// or services. It includes properties for identifying the tier, its rank, display color, order, and associated
 /// images.</remarks>
-public class TierRowDto
+public class TierRowDto : ITierRowDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

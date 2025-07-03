@@ -2,13 +2,13 @@
 
 public record SaveTierImageCommand
 {
-    public int Id { get; init; }
+    required public Guid StorageKey { get; init; }
 
-    public Guid StorageKey { get; init; }
+    required public string Url { get; init; }
 
-    public int Order { get; init; }
+    required public int Order { get; init; }
 
     public string Note { get; init; } = string.Empty;
 
-    public int ContainerId { get; init; }
+    required public int ContainerId { get; init; }
 }

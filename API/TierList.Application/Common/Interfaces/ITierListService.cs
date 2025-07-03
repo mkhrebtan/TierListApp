@@ -1,4 +1,6 @@
-﻿using TierList.Application.Commands.TierList;
+﻿using TierList.Application.Commands.TierImage;
+using TierList.Application.Commands.TierList;
+using TierList.Application.Commands.TierRow;
 using TierList.Application.Common.DTOs;
 using TierList.Application.Common.Models;
 using TierList.Application.Queries;
@@ -64,5 +66,17 @@ public interface ITierListService
 
     Task<TierImageResult> GetImageUploadUrlAsync(GetTierImageUploadUrlQuery request);
 
-    Task<TierImageResult> GetImageDownloadUrlAsync(GetTierImageDownloadUrlQuery request);
+    Task<TierRowResult> CreateTierRowAsync(CreateTierRowCommand request);
+
+    Task<TierRowResult> UpdateTierRowAsync(IUpdateRowCommand request);
+
+    Task<TierRowResult> DeleteTierRowAsync(DeleteTierRowCommand request);
+
+    Task<TierImageResult> SaveImageTierImageAsync(SaveTierImageCommand request);
+
+    Task<TierImageResult> MoveTierImageAsync(MoveTierImageCommand request);
+
+    Task<TierImageResult> UpdateTierImageAsync(IUpdateImageCommand request);
+
+    Task<TierImageResult> DeleteTierImageAsync(DeleteTierImageCommand request);
 }
