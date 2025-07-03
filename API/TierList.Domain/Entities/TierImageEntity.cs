@@ -18,6 +18,11 @@ public class TierImageEntity : IEntity
     public Guid StorageKey { get; set; }
 
     /// <summary>
+    /// Gets or sets the URL associated with this instance.
+    /// </summary>
+    required public string Url { get; set; }
+
+    /// <summary>
     /// Gets or sets the order in which this item should be processed or displayed.
     /// </summary>
     public int Order { get; set; }

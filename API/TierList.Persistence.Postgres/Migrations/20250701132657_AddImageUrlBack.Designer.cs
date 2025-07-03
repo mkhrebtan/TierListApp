@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TierList.Persistence.Postgres;
@@ -11,9 +12,11 @@ using TierList.Persistence.Postgres;
 namespace TierList.Persistence.Postgres.Migrations
 {
     [DbContext(typeof(TierListDbContext))]
-    partial class TierListDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250701132657_AddImageUrlBack")]
+    partial class AddImageUrlBack
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

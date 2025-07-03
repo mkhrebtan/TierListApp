@@ -31,6 +31,9 @@ internal class TierImageEntityConfiguration : IEntityTypeConfiguration<TierImage
         builder.Property(i => i.StorageKey)
             .IsRequired();
 
+        builder.Property(i => i.Url)
+            .IsRequired();
+
         builder.Property(i => i.Note)
             .HasDefaultValue(string.Empty);
 
