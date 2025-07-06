@@ -36,4 +36,14 @@ public static class DependencyInjection
         services.AddScoped<ITierListRepository, TierListRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
     }
+
+    public static void EnsureDataInitialized(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<TierListDbContext>();
+        if (dbContext.Database.GetPendingMigrations().Any())
+        {
+            dbContext.Database.Migrate();
+        }
+    }
 }

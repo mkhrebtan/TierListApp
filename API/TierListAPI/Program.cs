@@ -65,6 +65,8 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.Services.EnsureDataInitialized();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
