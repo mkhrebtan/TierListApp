@@ -1,20 +1,25 @@
 const body = document.body;
 const main = document.body.querySelector('.main');
+const listTitle = document.getElementById("listTitle");
 const dataManager = new TierListDataManager();
 let tierList = null;
 let backupImagesDropBox = null;
+
+const apiUrl = 'https://localhost:5001/'
 
 listName = '';
 let rows = [];
 let images = [];
 
 window.addEventListener('DOMContentLoaded', async () => {
-  const urlList = './data/list.json';
-  const listData = await fetchJSONData(urlList);
+  const urlList = apiUrl + 'lists/1';
+  const listData = await makeApiCall(urlList);
   if (!listData) {
     console.error('No data to render');
     return;
   }
+
+  console.log('List data loaded:', listData);
 
   dataManager.loadData(listData);
   renderList();
@@ -22,24 +27,57 @@ window.addEventListener('DOMContentLoaded', async () => {
   initializeDragAndDrop();
   initializePopup();
   initializeEditing();
+  initializeImageUploading();
 });
 
-async function fetchJSONData(url) {
+async function fetchData(url) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      console.error(`HTTP error! Status: ${response.status}, Error Text: ${(await response.text()).trim()}`);
+      return;
     }
-    return await response.json();
+    const data = await response.json();
+    console.log("Data fetched successfully!");
+    return data;
   } catch (error) {
-    console.error('Failed to fetch data:', error);
+    console.error(`Error occurred: ${error.message}`);
+  }
+}
+
+async function makeApiCall(url, queryParams = null, method = 'GET', body = null) {
+  try {
+    const fullUrl = queryParams ? `${url}?${new URLSearchParams(queryParams)}` : url;
+    const options = {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+    
+    const response = await fetch(fullUrl, options);
+    if (!response.ok) {
+      console.error(`HTTP error! Status: ${response.status}, Error Text: ${(await response.text()).trim()}`);
+      return null;
+    }
+    
+    if (method === 'DELETE') {
+      return { success: true, message: 'Operation successful' };
+    }
+    else {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error(`Error occurred: ${error.message}`);
     return null;
   }
 }
 
 function renderList() {
-  const listHeader = document.createElement('h2');
-  listHeader.textContent = dataManager.listData.name;
+  listTitle.textContent = dataManager.listData.title;
 
   const listContainer = document.createElement('div');
   listContainer.classList.add('tier-list');
@@ -47,7 +85,9 @@ function renderList() {
 
   tierList = listContainer;
 
-  dataManager.listData.rows.forEach(row => {
+  const rows = Array.from(dataManager.listData.rows.values());
+
+  rows.sort((a, b) => a.order - b.order).forEach(row => {
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('tier-row');
     rowContainer.id = `row-${row.id}`;
@@ -64,9 +104,8 @@ function renderList() {
     rowDropBox.classList.add('tier-drop-box');
     rowDropBox.id = `drop-box-${row.id}`;
 
-    // Get images for this row
-    const rowImages = dataManager.getRowImages(row.id);
-    rowImages.forEach(image => {
+    const rowImages = Array.from(dataManager.getRowImages(row.id).values());
+    rowImages.sort((a, b) => a.order - b.order).forEach(image => {
       const imageContainer = createImageElement(image);
       rowDropBox.appendChild(imageContainer);
     });
@@ -76,7 +115,7 @@ function renderList() {
     listContainer.appendChild(rowContainer);
   });
   
-  main.appendChild(listHeader);
+  // main.appendChild(listHeader);
   main.appendChild(listContainer);
 }
 
@@ -90,8 +129,8 @@ function renderBackupImages() {
 
   backupImagesDropBox = dropBox;
 
-  const backupImages = dataManager.getBackupImages();
-  backupImages.forEach(image => {
+  const backupImages = Array.from(dataManager.getBackupImages().values());
+  backupImages.sort((a, b) => a.order - b.order).forEach(image => {
     const imageContainer = createImageElement(image);
     dropBox.appendChild(imageContainer);
   });
@@ -108,24 +147,8 @@ function createImageElement(image) {
 
   const imageElement = document.createElement('img');
   imageElement.src = image.url;
-  imageElement.alt = image.altText;
   imageElement.draggable = false;
 
   imageContainer.appendChild(imageElement);
   return imageContainer;
-}
-
-const fileSelect = document.getElementById("fileSelect"),
-fileInput = document.getElementById("fileInput");
-
-fileInput.addEventListener("change", handleFiles, false);
-
-function handleFiles() {
-  if (this.files.length) {
-    for (const file of this.files) {
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      body.appendChild(img);
-    }
-  }
 }

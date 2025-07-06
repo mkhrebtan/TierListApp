@@ -140,11 +140,11 @@ class ChangeRankColorCommand extends ListEditCommand {
 }
 
 class ChangeRankTextCommand extends ListEditCommand {
-    constructor(dataManager, tierRankContainer, row, newRank) {
+    constructor(dataManager, tierRankText, row, newRank) {
         super();
         this.dataManager = dataManager;
         this.row = row;
-        this.tierRankContainer = tierRankContainer;
+        this.tierRankText = tierRankText;
         this.newRank = newRank;
         this.oldRank = null;
     }
@@ -152,12 +152,12 @@ class ChangeRankTextCommand extends ListEditCommand {
     execute() {
         this.oldRank = this.row.rank;
         this.dataManager.updateRowRank(this.row.id, this.newRank);
-        // this.tierRankContainer.textContent = this.newRank;
+        this.tierRankText.textContent = this.newRank;
     }
 
     undo() {
         this.dataManager.updateRowRank(this.row.id, this.oldRank);
-        this.tierRankContainer.textContent = this.oldRank;
+        this.tierRankText.textContent = this.oldRank;
     }
 }
 

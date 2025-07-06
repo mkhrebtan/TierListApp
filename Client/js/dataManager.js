@@ -2,106 +2,321 @@ class TierListDataManager {
   constructor() {
     this.listData = {
       id: null,
-      name: '',
+      title: '',
       rows: new Map(), // rowId -> row data
       images: new Map(), // imageId -> image data
       rowImages: new Map(), // rowId -> [imageIds]
+      backupRowId: null,
       backupImages: new Set() // imageIds
     };
   }
 
-  // Initialize from API/JSON
   loadData(jsonData) {
     this.listData.id = jsonData.id;
-    this.listData.name = jsonData.name;
+    this.listData.title = jsonData.title;
     
-    // Store rows
     jsonData.rows.forEach(row => {
       this.listData.rows.set(row.id, {
         id: row.id,
         rank: row.rank,
         colorHex: row.colorHex,
+        order: row.order,
       });
       
-      // Initialize row images array
       this.listData.rowImages.set(row.id, []);
       
-      // Store images and their row assignments
       row.images.forEach(image => {
         this.listData.images.set(image.id, {
           id: image.id,
+          storageKey: image.storageKey,
           url: image.url,
-          altText: image.altText,
           note: image.note,
+          containerId: image.containerId,
+          order: image.order,
         });
         this.listData.rowImages.get(row.id).push(image.id);
       });
     });
     
-    // Store backup images
-    jsonData.backupImages.forEach(image => {
+    this.listData.backupRowId = jsonData.backupRow.id;
+
+    jsonData.backupRow.images.forEach(image => {
       this.listData.images.set(image.id, {
         id: image.id,
+        storageKey: image.storageKey,
         url: image.url,
-        altText: image.altText,
-        note: image.note
+        note: image.note,
+        containerId: image.containerId,
+        order: image.order,
       });
       this.listData.backupImages.add(image.id);
     });
   }
 
-  updateImageOrder(rowId, imageId, oldIndex, newIndex) {
-    const image = this.listData.images.get(imageId);
-    if (!image) {
-      console.error(`Image with ID ${imageId} not found.`);
-      return { success: false, message: 'Image not found' };
+  async getImage(imageId) {
+    return this.listData.images.get(imageId);
+  }
+
+  async addImage(imageToSave)
+  {
+    const saveResponse = await makeApiCall(apiUrl + 'images', null, 'POST', imageToSave);
+    if (!saveResponse) {
+      console.error('Failed to save image data');
+      return { success: false, message: 'Failed to save image' };
     }
 
-    let rowImagesIds = null;
-    let inBackup = false;
+    dataManager.listData.images.set(imageToSave.id, saveResponse);
+    return { success: true, message: 'Image saved successfully', image: saveResponse };
+  }
+
+  async updateImageOrder(rowId, imageId, newIndex) {
     if (rowId === 'backup-drop-box') {
-      rowImagesIds = Array.from(this.listData.backupImages);
-      inBackup = true;
+      rowId = this.listData.backupRowId;
     }
-    else {
-      rowImagesIds = this.listData.rowImages.get(rowId);
-      if (!rowImagesIds) {
-        console.error(`Row with ID ${rowId} not found.`);
-        return { success: false, message: 'Row not found' };
-      }
+    
+    const moveImageRequestBody = {
+      id: imageId,
+      listId: this.listData.id,
+      containerId: rowId,
+      order: newIndex + 1,
+    };
+
+    const updatedImage = await makeApiCall(
+      apiUrl + `images/${imageId}/reorder`,
+      null,
+      'PUT',
+      moveImageRequestBody
+    );
+
+    if (!updatedImage) {
+      console.error(`Failed to update image order for ID ${imageId}`);
+      return { success: false, message: 'Failed to update image order' };
     }
 
-    const [element] = rowImagesIds.splice(oldIndex, 1); 
-    rowImagesIds.splice(newIndex, 0, element);
-
-    if (inBackup) {
-      this.listData.backupImages.clear();
-      rowImagesIds.forEach(id => this.listData.backupImages.add(id));
-    }
-
+    this.listData.images.set(imageId, updatedImage);
     return { success: true, message: 'Image order updated successfully' };
   }
 
-  moveImage(imageId, fromRowId, toRowId, newIndex) {
+  async moveImage(imageId, fromRowId, toRowId, newIndex) {
+    let fromContainerId = null;
     if (fromRowId === 'backup-drop-box') {
-      this.listData.backupImages.delete(imageId);
+      fromContainerId = this.listData.backupRowId;
     } else {
-      const fromArray = this.listData.rowImages.get(fromRowId);
-      const index = fromArray.indexOf(imageId);
-      if (index > -1) fromArray.splice(index, 1);
+      fromContainerId = fromRowId;
     }
     
-    let lastIndex = 0;
+    let toContainerId = null;
     if (toRowId === 'backup-drop-box') {
-      this.listData.backupImages.add(imageId);
-      lastIndex = this.listData.backupImages.size - 1;
-    } else {
-      const toArray = this.listData.rowImages.get(toRowId);
-      toArray.push(imageId);
-      lastIndex = toArray.length - 1;
+      toContainerId = this.listData.backupRowId;
     }
-    
-    this.updateImageOrder(toRowId, imageId, lastIndex, newIndex);
+    else {
+      toContainerId = toRowId;
+    }
+
+    const moveImageRequestBody = {
+      id: imageId,
+      listId: this.listData.id,
+      fromContainerId: fromContainerId,
+      toContainerId: toContainerId,
+      order: newIndex + 1,
+    };
+
+    const updatedImage = await makeApiCall(
+      apiUrl + `images/${imageId}/move`,
+      null,
+      'PUT',
+      moveImageRequestBody
+    );
+
+    if (!updatedImage) {
+      console.error(`Failed to move image with ID ${imageId}`);
+      return { success: false, message: 'Failed to move image' };
+    }
+
+    this.listData.images.set(imageId, updatedImage);
+    return { success: true, message: 'Image moved successfully' };
+  }
+
+  async updateImageNote(imageId, newNote) {
+    const image = this.listData.images.get(imageId);
+    const updateImageNoteRequestBody = {
+      id: imageId,
+      listId: this.listData.id,
+      containerId: image.containerId,
+      note: newNote,
+    };
+
+    const updatedImage = await makeApiCall(
+      apiUrl + `images/${imageId}/note`,
+      null,
+      'PUT',
+      updateImageNoteRequestBody
+    );
+
+    if (!updatedImage) {
+      console.error(`Failed to update note for image with ID ${imageId}`);
+      return { success: false, message: 'Failed to update image note' };
+    }
+
+    this.listData.images.set(imageId, updatedImage);
+    return { success: true, message: 'Image note updated successfully', image: updatedImage };
+  }
+
+  async updateImageUrl(imageId, newUrl) {
+    const image = this.listData.images.get(imageId);
+    const updateImageUrlRequestBody = {
+      id: imageId,
+      listId: this.listData.id,
+      containerId: image.containerId,
+      url: newUrl,
+    };
+
+    const updatedImage = await makeApiCall(
+      apiUrl + `images/${imageId}/url`,
+      null,
+      'PUT',
+      updateImageUrlRequestBody
+    );
+
+    if (!updatedImage) {
+      console.error(`Failed to update URL for image with ID ${imageId}`);
+      return { success: false, message: 'Failed to update image URL' };
+    }
+
+    this.listData.images.set(imageId, updatedImage);
+    return { success: true, message: 'Image URL updated successfully', image: updatedImage };
+  }
+
+  async deleteImage(imageId) {
+    const image = this.listData.images.get(imageId);
+    const params = new URLSearchParams();
+    params.append('listId', this.listData.id);
+    params.append('containerId', image.containerId);
+
+    const deleteResponse = await makeApiCall(
+      apiUrl + `images/${imageId}`,
+      params,
+      'DELETE',
+      null
+    );
+
+    if (!deleteResponse) {
+      console.error(`Failed to delete image with ID ${imageId}`);
+      return { success: false, message: 'Failed to delete image' };
+    }
+    else {
+      this.listData.images.delete(imageId);
+      return { success: true, message: 'Image deleted successfully' };
+    }
+  }
+
+  async addRow()
+  {
+    const addRowRequestBody = {
+      listId: this.listData.id,
+      rank: 'New',
+      colorHex: '#FFFFFF',
+      order: this.listData.rows.size + 1,
+    };
+
+    const newRow = await makeApiCall(apiUrl + 'rows', null, 'POST', addRowRequestBody);
+    if (!newRow) {
+      console.error('Failed to add new row');
+      return { success: false, message: 'Failed to add row' };
+    }
+
+    this.listData.rows.set(newRow.id, newRow);
+    return { success: true, message: 'Row added successfully', row: newRow };
+  }
+
+  async updateRowRank(rowId, newRank) {
+    const updateRankRequestBody = {
+      id: rowId,
+      listId: this.listData.id,
+      rank: newRank,
+    };
+
+    const updatedRow = await makeApiCall(
+      apiUrl + `rows/${rowId}/rank`,
+      null,
+      'PUT',
+      updateRankRequestBody
+    );
+
+    if (!updatedRow) {
+      console.error(`Failed to update rank for row with ID ${rowId}`);
+      return { success: false, message: 'Failed to update row rank' };
+    }
+
+    this.listData.rows.set(rowId, updatedRow);
+    return { success: true, message: 'Row rank updated successfully', row: updatedRow };
+  }
+
+  async updateRowColor(rowId, newColorHex) {
+    const updateColorRequestBody = {
+      id: rowId,
+      listId: this.listData.id,
+      colorHex: newColorHex,
+    };
+
+    const updatedRow = await makeApiCall(
+      apiUrl + `rows/${rowId}/color`,
+      null,
+      'PUT',
+      updateColorRequestBody
+    );
+
+    if (!updatedRow) {
+      console.error(`Failed to update color for row with ID ${rowId}`);
+      return { success: false, message: 'Failed to update row color' };
+    }
+
+    this.listData.rows.set(rowId, updatedRow);
+    return { success: true, message: 'Row color updated successfully', row: updatedRow };
+  }
+
+  async updateRowOrder(rowId, newOrder) {
+    const updateOrderRequestBody = {
+      id: rowId,
+      listId: this.listData.id,
+      order: newOrder,
+    };
+
+    const updatedRow = await makeApiCall(
+      apiUrl + `rows/${rowId}/order`,
+      null,
+      'PUT',
+      updateOrderRequestBody
+    );
+
+    if (!updatedRow) {
+      console.error(`Failed to update order for row with ID ${rowId}`);
+      return { success: false, message: 'Failed to update row order' };
+    }
+
+    this.listData.rows.set(rowId, updatedRow);
+    return { success: true, message: 'Row order updated successfully', row: updatedRow };
+  }
+
+  async deleteRow(rowId) {
+    const deleteParams = new URLSearchParams();
+    deleteParams.append('listId', this.listData.id);
+    deleteParams.append('isDeleteWithImages', true);
+
+    const deleteResponse = await makeApiCall(
+      apiUrl + `rows/${rowId}`,
+      deleteParams,
+      'DELETE',
+      null
+    );
+
+    if (!deleteResponse) {
+      console.error(`Failed to delete row with ID ${rowId}`);
+      return { success: false, message: 'Failed to delete row' };
+    }
+
+    this.listData.rows.delete(rowId);
+    return { success: true, message: 'Row deleted successfully' };
   }
 
   getRowImages(rowId) {
@@ -112,10 +327,6 @@ class TierListDataManager {
   getBackupImages() {
     return Array.from(this.listData.backupImages)
       .map(id => this.listData.images.get(id));
-  }
-
-  getImage(imageId) {
-    return this.listData.images.get(imageId);
   }
 
   toAPIFormat() {
@@ -132,98 +343,7 @@ class TierListDataManager {
     };
   }
 
-  deleteImage(imageId) {
-    const image = this.listData.images.get(imageId);
-    if (!image) {
-      console.error(`Image with ID ${imageId} not found.`);
-      return { success: false, message: 'Image not found' };
-    }
-
-    this.listData.rowImages.forEach((imageIds, rowId) => {
-      const index = imageIds.indexOf(imageId);
-      if (index > -1) {
-        imageIds.splice(index, 1);
-      }
-    });
-
-    this.listData.backupImages.delete(imageId);
-
-    this.listData.images.delete(imageId);
-    return { success: true, message: 'Image deleted successfully' };
-  }
-
-  updateRankColor(rowId, newColorHex) {
-    const row = this.listData.rows.get(rowId);
-    if (!row) {
-      console.error(`Row with ID ${rowId} not found.`);
-      return { success: false, message: 'Row not found' };
-    }
-
-    row.colorHex = newColorHex;
-    return { success: true, message: 'Row color updated successfully' };
-  }
-
-  updateRowOrder(oldIndex, newIndex) {
-    const rowsArray = Array.from(this.listData.rows.values());
-    const [element] = rowsArray.splice(oldIndex, 1); 
-    rowsArray.splice(newIndex, 0, element);
-    this.listData.rows.clear();
-    this.listData.rows = new Map(rowsArray.map(row => [row.id, row]));
-    return { success: true, message: 'Row order updated successfully' };
-  }
-
-  createRow(rank = 'New', colorHex = '#FFFFFF') {
-    const newRow = {
-      id: this.listData.rows.size + 1,
-      rank: rank,
-      colorHex: colorHex,
-      images: []
-    };
-
-    return newRow;
-  }
-
-  addRow(newRow, rowIndex) {
-    this.listData.rows.set(newRow.id, newRow);
-    this.listData.rowImages.set(newRow.id, []);
-
-    if (rowIndex >= 0 && rowIndex < this.listData.rows.size) {
-      this.updateRowOrder(this.listData.rows.size - 1, rowIndex);
-    }
-
-    return { success: true, message: 'Row added successfully', row: newRow };
-  }
-
-  deleteRow(rowId) {
-    const row = this.listData.rows.get(rowId);
-    if (!row) {
-      console.error(`Row with ID ${rowId} not found.`);
-      return { success: false, message: 'Row not found' };
-    }
-
-    const imageIds = this.listData.rowImages.get(rowId) || [];
-    imageIds.forEach(imageId => {
-      this.listData.backupImages.add(imageId);
-    });
-
-    this.listData.rows.delete(rowId);
-    this.listData.rowImages.delete(rowId);
-    
-    return { success: true, message: 'Row deleted successfully' };
-  }
-
   getRow(rowId) {
     return this.listData.rows.get(rowId);
-  }
-
-  updateRowRank(rowId, newRank) {
-    const row = this.listData.rows.get(rowId);
-    if (!row) {
-      console.error(`Row with ID ${rowId} not found.`);
-      return { success: false, message: 'Row not found' };
-    }
-
-    row.rank = newRank;
-    return { success: true, message: 'Row rank updated successfully' };
   }
 }

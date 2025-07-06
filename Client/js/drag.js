@@ -14,7 +14,7 @@ function initializeDragAndDrop() {
     });
 }
 
-function updateDataAfterDrop(evt) {
+async function updateDataAfterDrop(evt) {
     if (!evt.item) return;
 
     const imageId = parseInt(evt.item.id.replace('img', ''));
@@ -30,7 +30,13 @@ function updateDataAfterDrop(evt) {
     }
     
     if (evt.from === evt.to) {
-        dataManager.updateImageOrder(fromBoxId, imageId, oldIndex, newIndex);
+        if (newIndex === oldIndex) return;
+        const updateImageResult = await dataManager.updateImageOrder(fromBoxId, imageId, newIndex);
+        if (!updateImageResult.success) {
+            evt.from.insertBefore(evt.item, evt.from.children[oldIndex]);
+            alert(`Error updating image order: ${updateImageResult.message}. Please try again.`);
+            return;
+        }
     }
     else {
         let toBoxId = null;
@@ -40,9 +46,13 @@ function updateDataAfterDrop(evt) {
         else {
             toBoxId = parseInt(evt.to.id.replace('drop-box-', ''));
         }
-        dataManager.moveImage(imageId, fromBoxId, toBoxId, newIndex);
+
+        const updateImageResult = await dataManager.moveImage(imageId, fromBoxId, toBoxId, newIndex);
+        if (!updateImageResult.success) {
+            evt.from.insertBefore(evt.item, evt.from.children[oldIndex]);
+            alert(`Error moving image: ${updateImageResult.message}. Please try again.`);
+            return;
+        }
     }
-    
-    console.log(dataManager.toAPIFormat());
 }
 
