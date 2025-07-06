@@ -34,5 +34,6 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
         services.AddScoped<ITierListRepository, TierListRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
     }
 }

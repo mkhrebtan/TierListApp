@@ -51,6 +51,18 @@ public class TierListDbContext : DbContext
     public DbSet<TierImageEntity> TierImages { get; set; }
 
     /// <summary>
+    /// Gets or sets the collection of users in the database.
+    /// </summary>
+    public DbSet<User> Users { get; set; }
+
+    /// <summary>
+    /// Gets or sets the database set of refresh tokens.
+    /// </summary>
+    /// <remarks>This property provides access to the refresh tokens stored in the database.  It can be used
+    /// to query, add, update, or delete refresh token records.</remarks>
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+    /// <summary>
     /// Configures the model for the database context by applying entity configurations.
     /// </summary>
     /// <remarks>This method applies specific configurations for the entities in the context by using the <see
@@ -62,6 +74,8 @@ public class TierListDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TierListEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TierImageContainerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TierImageEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

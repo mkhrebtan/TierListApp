@@ -27,8 +27,16 @@ public class TierListEntityConfiguration : IEntityTypeConfiguration<TierListEnti
         builder.Property(t => t.Id)
             .ValueGeneratedOnAdd();
 
+        builder.Property(t => t.Title)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.HasMany(t => t.Containers)
             .WithOne(c => c.TierList)
             .HasForeignKey(c => c.TierListId);
+
+        builder.HasOne(t => t.User)
+            .WithMany(u => u.TierLists)
+            .HasForeignKey(t => t.UserId);
     }
 }
