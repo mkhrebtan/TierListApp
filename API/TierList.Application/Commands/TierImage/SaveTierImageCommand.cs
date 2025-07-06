@@ -11,4 +11,6 @@ public record SaveTierImageCommand
     public string Note { get; init; } = string.Empty;
 
     required public int ContainerId { get; init; }
+
+    required public int ListId { get; init; }
 }

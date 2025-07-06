@@ -1,6 +1,6 @@
 ﻿using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Common.DTOs;
+namespace TierList.Application.Common.DTOs.TierImage;
 
 /// <summary>
 /// Represents an image associated with a specific tier, including metadata such as its URL, note, and order within a

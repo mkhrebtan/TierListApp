@@ -1,6 +1,7 @@
-﻿using TierList.Application.Common.Interfaces;
+﻿using TierList.Application.Common.DTOs.TierRow;
+using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Common.DTOs;
+namespace TierList.Application.Common.DTOs.TierList;
 
 /// <summary>
 /// Represents the data transfer object (DTO) for a tier list, including its identifier, title, tiers, and backup row

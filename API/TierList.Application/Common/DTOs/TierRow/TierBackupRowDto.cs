@@ -1,4 +1,6 @@
-﻿namespace TierList.Application.Common.DTOs;
+﻿using TierList.Application.Common.DTOs.TierImage;
+
+namespace TierList.Application.Common.DTOs.TierRow;
 
 /// <summary>
 /// Represents a data transfer object (DTO) for a tier backup row, containing an identifier and associated images.

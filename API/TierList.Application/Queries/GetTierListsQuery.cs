@@ -1,3 +1,6 @@
 ﻿namespace TierList.Application.Queries;
 
-public record GetTierListsQuery;
+public record GetTierListsQuery
+{
+    required public int UserId { get; init; }
+}

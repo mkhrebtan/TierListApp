@@ -1,9 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.ComponentModel;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TierList.Application.Commands.TierImage;
 using TierList.Application.Commands.TierList;
 using TierList.Application.Commands.TierRow;
-using TierList.Application.Common.DTOs;
+using TierList.Application.Common.DTOs.TierImage;
+using TierList.Application.Common.DTOs.TierList;
+using TierList.Application.Common.DTOs.TierRow;
 using TierList.Application.Common.Enums;
 using TierList.Application.Common.Interfaces;
 using TierList.Application.Common.Models;
@@ -11,6 +14,7 @@ using TierList.Application.Queries;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TierList.Application.Common.Services;
 
@@ -32,8 +36,9 @@ public class TierListService : ITierListService
     /// <summary>
     /// Initializes a new instance of the <see cref="TierListService"/> class.
     /// </summary>
-    /// <param name="tierListRepository">The repository used to manage tier list data. This parameter cannot be null.</param>
-    /// <param name="unitOfWork">The unit of work instance used to manage transactional operations. This parameter cannot be null.</param>
+    /// <param name="tierListRepository">The repository used to manage tier list data storage and retrieval.</param>
+    /// <param name="unitOfWork">The unit of work instance used to manage transactional operations across multiple repositories.</param>
+    /// <param name="imageStorageService">The service responsible for handling image storage and retrieval operations.</param>
     public TierListService(ITierListRepository tierListRepository, IUnitOfWork unitOfWork, IImageStorageService imageStorageService)
     {
         _tierListRepository = tierListRepository;
@@ -56,12 +61,25 @@ public class TierListService : ITierListService
         {
             return TierListResult.Failure(error: "List title cannot be empty.", errorType: ErrorType.ValidationError);
         }
+        else if (request.Title.Length > 100)
+        {
+            return TierListResult.Failure(
+                error: "List title cannot exceed 100 characters.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (request.UserId <= 0)
+        {
+            return TierListResult.Failure(
+                error: "Invalid user ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
 
         TierListEntity tierList = new()
         {
             Title = request.Title,
             Created = DateTime.UtcNow,
             LastModified = DateTime.UtcNow,
+            UserId = request.UserId,
         };
 
         List<TierImageContainer> defaultContainers = new()
@@ -115,11 +133,23 @@ public class TierListService : ITierListService
         {
             return TierListResult.Failure(error: "Invalid list ID provided.", errorType: ErrorType.ValidationError);
         }
+        else if (request.UserId <= 0)
+        {
+            return TierListResult.Failure(
+                error: "Invalid user ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
 
         TierListEntity? listToDelete = await _tierListRepository.GetByIdAsync(request.Id);
         if (listToDelete is null)
         {
             return TierListResult.Failure(error: $"List with ID {request.Id} not found.", errorType: ErrorType.NotFound);
+        }
+        else if (listToDelete.UserId != request.UserId)
+        {
+            return TierListResult.Failure(
+                error: $"List with ID {request.Id} does not belong to user with ID {request.UserId}.",
+                errorType: ErrorType.ValidationError);
         }
 
         try
@@ -149,10 +179,17 @@ public class TierListService : ITierListService
     /// <param name="request">The query parameters used to filter or modify the retrieval of tier lists.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a read-only collection  of <see
     /// cref="TierListBriefDto"/> objects, each representing a brief summary of a tier list.</returns>
-    public async Task<IReadOnlyCollection<TierListBriefDto>> GetTierListsAsync(GetTierListsQuery request)
+    public async Task<AllTierListsResult> GetTierListsAsync(GetTierListsQuery request)
     {
-        var listsEntities = await _tierListRepository.GetAllAsync();
-        return listsEntities
+        if (request.UserId <= 0)
+        {
+            return AllTierListsResult.Failure(
+                error: "Invalid user ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        var listsEntities = await _tierListRepository.GetAllAsync(request.UserId);
+        var listsDtos = listsEntities
             .Select(l => new TierListBriefDto
             {
                 Id = l.Id,
@@ -160,6 +197,8 @@ public class TierListService : ITierListService
                 Created = l.Created,
                 LastModified = l.LastModified,
             }).ToList().AsReadOnly();
+
+        return AllTierListsResult.Success(listsDtos);
     }
 
     /// <summary>
@@ -182,11 +221,29 @@ public class TierListService : ITierListService
         {
             return TierListResult.Failure(error: "List title cannot be empty.", errorType: ErrorType.ValidationError);
         }
+        else if (request.UserId <= 0)
+        {
+            return TierListResult.Failure(
+                error: "Invalid user ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (request.Title.Length > 100)
+        {
+            return TierListResult.Failure(
+                error: "List title cannot exceed 100 characters.",
+                errorType: ErrorType.ValidationError);
+        }
 
         TierListEntity? existingList = await _tierListRepository.GetByIdAsync(request.Id);
         if (existingList is null)
         {
             return TierListResult.Failure(error: $"List with ID {request.Id} not found.", errorType: ErrorType.NotFound);
+        }
+        else if (existingList.UserId != request.UserId)
+        {
+            return TierListResult.Failure(
+                error: $"List with ID {request.Id} does not belong to user with ID {request.UserId}.",
+                errorType: ErrorType.ValidationError);
         }
 
         existingList.Title = request.Title;
@@ -232,6 +289,12 @@ public class TierListService : ITierListService
                 error: "Invalid list ID provided.",
                 errorType: ErrorType.ValidationError);
         }
+        else if (request.UserId <= 0)
+        {
+            return TierListResult.Failure(
+                error: "Invalid user ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
 
         TierListEntity? tierList = await _tierListRepository.GetByIdAsync(request.Id);
         if (tierList is null)
@@ -239,6 +302,12 @@ public class TierListService : ITierListService
             return TierListResult.Failure(
                 error: $"List with ID {request.Id} not found.",
                 errorType: ErrorType.NotFound);
+        }
+        else if (tierList.UserId != request.UserId)
+        {
+            return TierListResult.Failure(
+                error: $"List with ID {request.Id} does not belong to user with ID {request.UserId}.",
+                errorType: ErrorType.ValidationError);
         }
 
         TierBackupRowEntity? listBackupRowEntity = await _tierListRepository.GetBackupRowAsync(tierList.Id);
@@ -292,10 +361,27 @@ public class TierListService : ITierListService
             return TierImageResult.Failure("Container ID must be greater than zero.", ErrorType.ValidationError);
         }
 
-        TierImageContainer container = await _tierListRepository.GetContainerByIdAsync(request.ContainerId);
+        TierImageContainer container = await _tierListRepository.GetBackupRowAsync(request.ListId);
         if (container is null)
         {
-            return TierImageResult.Failure($"Container with ID {request.ContainerId} not found.", ErrorType.NotFound);
+            return TierImageResult.Failure(
+                error: $"Backup row for list with ID {request.ListId} not found.",
+                errorType: ErrorType.UnexpectedError);
+        }
+        else if (container.Id != request.ContainerId)
+        {
+            return TierImageResult.Failure(
+                error: $"Provided container with id {request.ContainerId} was not an id of backup row container",
+                errorType: ErrorType.ValidationError);
+        }
+
+        IEnumerable<TierImageEntity> backupImages = await _tierListRepository.GetImagesAsync(container.Id);
+        int imagesCount = backupImages.Count();
+        if (request.Order > imagesCount + 1)
+        {
+            return TierImageResult.Failure(
+                error: $"Order {request.Order} is out of range for the number of images in container {container.Id}.",
+                errorType: ErrorType.ValidationError);
         }
 
         TierImageEntity imageEntity = new()
@@ -626,7 +712,7 @@ public class TierListService : ITierListService
         return TierRowResult.Success();
     }
 
-    public async Task<TierImageResult> MoveTierImageAsync(MoveTierImageCommand request)
+    public async Task<TierImageResult> ReorderTierImageAsync(ReorderTierImageCommand request)
     {
         if (request.Id <= 0)
         {
@@ -675,22 +761,209 @@ public class TierListService : ITierListService
                 errorType: ErrorType.ValidationError);
         }
 
-        if (request.IsMoveToOtherContainer)
+        List<TierImageEntity> containerImages = (await _tierListRepository.GetImagesAsync(request.ContainerId)).OrderBy(i => i.Order).ToList();
+        TierImageEntity? imageEntity = containerImages.FirstOrDefault(i => i.Id == request.Id);
+        if (imageEntity is null)
         {
-            TierImageEntity? imageEntity = await _tierListRepository.GetImageByIdAsync(request.Id);
-            if (imageEntity is null)
+            return TierImageResult.Failure(
+                error: $"Image with ID {request.Id} not found in container {request.ContainerId}.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        int imagesCount = containerImages.Count;
+        int order = request.Order;
+        if (order > imagesCount + 1)
+        {
+            return TierImageResult.Failure(
+                error: $"Order {order} is out of range for the number of images in container {request.ContainerId}.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (order == imageEntity.Order)
+        {
+            return TierImageResult.Success(
+                new TierImageDto
+                {
+                    Id = imageEntity.Id,
+                    StorageKey = imageEntity.StorageKey,
+                    Url = imageEntity.Url,
+                    Note = imageEntity.Note,
+                    ContainerId = imageEntity.ContainerId,
+                    Order = imageEntity.Order,
+                });
+        }
+
+        containerImages.Remove(imageEntity);
+        containerImages.Insert(order - 1, imageEntity);
+        for (int i = 0; i < imagesCount; i++)
+        {
+            containerImages[i].Order = i + 1;
+        }
+
+        try
+        {
+            await _unitOfWork.CreateTransactionAsync();
+            foreach (var image in containerImages)
             {
-                return TierImageResult.Failure(
-                    error: $"Image with ID {request.Id} not found.",
-                    errorType: ErrorType.NotFound);
+                _tierListRepository.UpdateImage(image);
             }
 
-            return await MoveImageToOtherContainer(imageEntity, request.ContainerId, request.Order);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
         }
-        else
+        catch (InvalidOperationException ex)
         {
-            return await MoveImageWithinContainer(request.Id, request.ContainerId, request.Order);
+            return TierImageResult.Failure(
+                error: ex.Message,
+                errorType: ErrorType.SaveDataError);
         }
+
+        return TierImageResult.Success(
+            new TierImageDto
+            {
+                Id = imageEntity.Id,
+                StorageKey = imageEntity.StorageKey,
+                Url = imageEntity.Url,
+                Note = imageEntity.Note,
+                ContainerId = imageEntity.ContainerId,
+                Order = imageEntity.Order,
+            });
+    }
+
+    public async Task<TierImageResult> MoveTierImageAsync(MoveTierImageCommand request)
+    {
+        if (request.Id <= 0)
+        {
+            return TierImageResult.Failure(
+                error: "Invalid image ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (request.ListId <= 0)
+        {
+            return TierImageResult.Failure(
+                error: "Invalid list ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (request.FromContainerId <= 0)
+        {
+            return TierImageResult.Failure(
+                error: "Invalid source container ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (request.ToContainerId <= 0)
+        {
+            return TierImageResult.Failure(
+                error: "Invalid target container ID provided.",
+                errorType: ErrorType.ValidationError);
+        }
+        else if (request.Order < 0)
+        {
+            return TierImageResult.Failure(
+                error: "Order must be a non-negative integer.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(request.ListId);
+        if (listEntity is null)
+        {
+            return TierImageResult.Failure(
+                error: $"List with ID {request.ListId} not found.",
+                errorType: ErrorType.NotFound);
+        }
+
+        TierImageContainer? sourceContainer = await _tierListRepository.GetContainerByIdAsync(request.FromContainerId);
+        if (sourceContainer is null)
+        {
+            return TierImageResult.Failure(
+                error: $"Source container with ID {request.ToContainerId} not found.",
+                errorType: ErrorType.NotFound);
+        }
+        else if (sourceContainer.TierListId != request.ListId)
+        {
+            return TierImageResult.Failure(
+                error: $"Source container with ID {request.FromContainerId} does not belong to list {request.ListId}.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        TierImageContainer? targetContainer = await _tierListRepository.GetContainerByIdAsync(request.ToContainerId);
+        if (targetContainer is null)
+        {
+            return TierImageResult.Failure(
+                error: $"Target container with ID {request.ToContainerId} not found.",
+                errorType: ErrorType.NotFound);
+        }
+        else if (targetContainer.TierListId != request.ListId)
+        {
+            return TierImageResult.Failure(
+                error: $"Target container with ID {request.ToContainerId} does not belong to list {request.ListId}.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        List<TierImageEntity> targetContainerImages = (await _tierListRepository.GetImagesAsync(request.ToContainerId)).OrderBy(i => i.Order).ToList();
+        int imagesCount = targetContainerImages.Count;
+        int order = request.Order;
+        if (order > imagesCount + 1)
+        {
+            return TierImageResult.Failure(
+                error: $"Order {order} is out of range for the number of images in target container {request.ToContainerId}.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        List<TierImageEntity> sourceContainerImages = (await _tierListRepository.GetImagesAsync(request.FromContainerId)).OrderBy(i => i.Order).ToList();
+        TierImageEntity? imageEntity = sourceContainerImages.FirstOrDefault(i => i.Id == request.Id);
+        if (imageEntity is null)
+        {
+            return TierImageResult.Failure(
+                error: $"Image with ID {request.Id} not found in source container {request.FromContainerId}.",
+                errorType: ErrorType.ValidationError);
+        }
+
+        sourceContainerImages.Remove(imageEntity);
+        for (int i = 0; i < sourceContainerImages.Count; i++)
+        {
+            sourceContainerImages[i].Order = i + 1;
+        }
+
+        imageEntity.ContainerId = request.ToContainerId;
+        targetContainerImages.Insert(order - 1, imageEntity);
+        for (int i = 0; i < imagesCount + 1; i++)
+        {
+            targetContainerImages[i].Order = i + 1;
+        }
+
+        try
+        {
+            await _unitOfWork.CreateTransactionAsync();
+
+            foreach (var image in sourceContainerImages)
+            {
+                _tierListRepository.UpdateImage(image);
+            }
+
+            foreach (var image in targetContainerImages)
+            {
+                _tierListRepository.UpdateImage(image);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return TierImageResult.Failure(
+                error: ex.Message,
+                errorType: ErrorType.SaveDataError);
+        }
+
+        return TierImageResult.Success(
+            new TierImageDto
+            {
+                Id = imageEntity.Id,
+                StorageKey = imageEntity.StorageKey,
+                Url = imageEntity.Url,
+                Note = imageEntity.Note,
+                ContainerId = imageEntity.ContainerId,
+                Order = imageEntity.Order,
+            });
     }
 
     public async Task<TierImageResult> UpdateTierImageAsync(IUpdateImageCommand request)
@@ -824,24 +1097,36 @@ public class TierListService : ITierListService
                 errorType: ErrorType.ValidationError);
         }
 
-        TierImageEntity? imageEntity = await _tierListRepository.GetImageByIdAsync(request.Id);
+        List<TierImageEntity> containerImages = (await _tierListRepository.GetImagesAsync(request.ContainerId)).OrderBy(i => i.Order).ToList();
+        TierImageEntity? imageEntity = containerImages.FirstOrDefault(i => i.Id == request.Id);
         if (imageEntity is null)
-        {
-            return TierImageResult.Failure(
-                error: $"Image with ID {request.Id} not found.",
-                errorType: ErrorType.NotFound);
-        }
-        else if (imageEntity.ContainerId != request.ContainerId)
         {
             return TierImageResult.Failure(
                 error: $"Image with ID {request.Id} does not belong to container {request.ContainerId}.",
                 errorType: ErrorType.ValidationError);
         }
 
+        var s3DeleteResult = await _imageStorageService.DeleteImageAsync(imageEntity.StorageKey);
+        if (!s3DeleteResult.IsSuccess)
+        {
+            return s3DeleteResult;
+        }
+
+        containerImages.Remove(imageEntity);
+        for (int i = 0; i < containerImages.Count; i++)
+        {
+            containerImages[i].Order = i + 1;
+        }
+
         try
         {
             await _unitOfWork.CreateTransactionAsync();
             _tierListRepository.DeleteImage(imageEntity);
+            foreach (var image in containerImages)
+            {
+                _tierListRepository.UpdateImage(image);
+            }
+
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -921,123 +1206,5 @@ public class TierListService : ITierListService
             Id = backupRowEntity.Id,
             Images = backupImages.AsReadOnly(),
         };
-    }
-
-    private async Task<TierImageResult> MoveImageWithinContainer(int imageId, int containerId, int order)
-    {
-        List<TierImageEntity> containerImages = (await _tierListRepository.GetImagesAsync(containerId)).OrderBy(i => i.Order).ToList();
-        TierImageEntity? imageEntity = containerImages.FirstOrDefault(i => i.Id == imageId);
-        if (imageEntity is null)
-        {
-            return TierImageResult.Failure(
-                error: $"Image with ID {imageId} does not found in container {containerId}.",
-                errorType: ErrorType.ValidationError);
-        }
-
-        int imagesCount = containerImages.Count;
-        if (order > imagesCount + 1)
-        {
-            return TierImageResult.Failure(
-                error: $"Order {order} is out of range for the number of images in container {containerId}.",
-                errorType: ErrorType.ValidationError);
-        }
-        else if (order == imageEntity.Order)
-        {
-            return TierImageResult.Success(
-                new TierImageDto
-                {
-                    Id = imageEntity.Id,
-                    StorageKey = imageEntity.StorageKey,
-                    Url = imageEntity.Url,
-                    Note = imageEntity.Note,
-                    ContainerId = imageEntity.ContainerId,
-                    Order = imageEntity.Order,
-                });
-        }
-
-        containerImages.Remove(imageEntity);
-        containerImages.Insert(order - 1, imageEntity);
-        for (int i = 0; i < imagesCount; i++)
-        {
-            containerImages[i].Order = i + 1;
-        }
-
-        try
-        {
-            await _unitOfWork.CreateTransactionAsync();
-            foreach (var image in containerImages)
-            {
-                _tierListRepository.UpdateImage(image);
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-            await _unitOfWork.CommitTransactionAsync();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return TierImageResult.Failure(
-                error: ex.Message,
-                errorType: ErrorType.SaveDataError);
-        }
-
-        return TierImageResult.Success(
-            new TierImageDto
-            {
-                Id = imageEntity.Id,
-                StorageKey = imageEntity.StorageKey,
-                Url = imageEntity.Url,
-                Note = imageEntity.Note,
-                ContainerId = imageEntity.ContainerId,
-                Order = imageEntity.Order,
-            });
-    }
-
-    private async Task<TierImageResult> MoveImageToOtherContainer(TierImageEntity imageEntity, int containerId, int order)
-    {
-        List<TierImageEntity> containerImages = (await _tierListRepository.GetImagesAsync(containerId)).OrderBy(i => i.Order).ToList();
-        int imagesCount = containerImages.Count;
-        if (order > imagesCount + 1)
-        {
-            return TierImageResult.Failure(
-                error: $"Order {order} is out of range for the number of images in container {containerId}.",
-                errorType: ErrorType.ValidationError);
-        }
-
-        imageEntity.ContainerId = containerId;
-        containerImages.Insert(order - 1, imageEntity);
-        for (int i = 0; i < imagesCount + 1; i++)
-        {
-            containerImages[i].Order = i + 1;
-        }
-
-        try
-        {
-            await _unitOfWork.CreateTransactionAsync();
-
-            foreach (var image in containerImages)
-            {
-                _tierListRepository.UpdateImage(image);
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-            await _unitOfWork.CommitTransactionAsync();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return TierImageResult.Failure(
-                error: ex.Message,
-                errorType: ErrorType.SaveDataError);
-        }
-
-        return TierImageResult.Success(
-            new TierImageDto
-            {
-                Id = imageEntity.Id,
-                StorageKey = imageEntity.StorageKey,
-                Url = imageEntity.Url,
-                Note = imageEntity.Note,
-                ContainerId = imageEntity.ContainerId,
-                Order = imageEntity.Order,
-            });
     }
 }

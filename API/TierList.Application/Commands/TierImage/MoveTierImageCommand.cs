@@ -12,9 +12,9 @@ public record MoveTierImageCommand
 
     required public int ListId { get; init; }
 
-    required public int ContainerId { get; init; }
+    required public int FromContainerId { get; init; }
+
+    required public int ToContainerId { get; init; }
 
     required public int Order { get; init; }
-
-    required public bool IsMoveToOtherContainer { get; init; }
 }

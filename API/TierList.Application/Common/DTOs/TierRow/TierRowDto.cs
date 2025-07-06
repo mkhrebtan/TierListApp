@@ -1,6 +1,7 @@
-﻿using TierList.Application.Common.Interfaces;
+﻿using TierList.Application.Common.DTOs.TierImage;
+using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Common.DTOs;
+namespace TierList.Application.Common.DTOs.TierRow;
 
 /// <summary>
 /// Represents a data transfer object for a tier row, containing information such as rank, color, order, and associated

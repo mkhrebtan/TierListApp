@@ -1,6 +1,6 @@
 ﻿using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Common.DTOs;
+namespace TierList.Application.Common.DTOs.TierList;
 
 /// <summary>
 /// Represents a brief summary of a tier list, including its identifier, title, and timestamps.

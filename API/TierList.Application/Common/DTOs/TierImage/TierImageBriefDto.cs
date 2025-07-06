@@ -1,6 +1,6 @@
 ﻿using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Common.DTOs;
+namespace TierList.Application.Common.DTOs.TierImage;
 
 public class TierImageBriefDto : ITierImageDto
 {
