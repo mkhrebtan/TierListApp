@@ -13,6 +13,11 @@ public class TierListEntity : IEntity
     public int Id { get; set; }
 
     /// <summary>
+    /// Gets or sets the unique identifier for the user owning list entity.
+    /// </summary>
+    public int UserId { get; set; }
+
+    /// <summary>
     /// Gets or sets the title associated with the object.
     /// </summary>
     required public string Title { get; set; }
@@ -31,4 +36,9 @@ public class TierListEntity : IEntity
     /// Gets or sets the collection of containers associated with the tier images.
     /// </summary>
     public List<TierImageContainer> Containers { get; set; } = new List<TierImageContainer>();
+
+    /// <summary>
+    /// Gets or sets the user associated with the current context.
+    /// </summary>
+    public User? User { get; set; }
 }

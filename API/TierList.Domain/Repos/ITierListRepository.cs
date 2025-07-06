@@ -14,13 +14,13 @@ namespace TierList.Domain.Repos;
 public interface ITierListRepository : IRepository<TierListEntity>
 {
     /// <summary>
-    /// Asynchronously retrieves all tier list entities.
+    /// Retrieves all tier list entities associated with the specified user.
     /// </summary>
-    /// <remarks>This method retrieves all tier list entities without applying any filters or pagination.  The
-    /// caller is responsible for handling the returned collection appropriately.</remarks>
-    /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
-    /// <see cref="TierListEntity"/> objects representing all tier list entities.</returns>
-    Task<IEnumerable<TierListEntity>> GetAllAsync();
+    /// <param name="userId">The unique identifier of the user whose tier list entities are to be retrieved. Must be a positive integer.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of <see
+    /// cref="TierListEntity"/> objects associated with the specified user. The list will be empty if no entities are
+    /// found.</returns>
+    Task<List<TierListEntity>> GetAllAsync(int userId);
 
     /// <summary>
     /// Retrieves an <see cref="IQueryable{T}"/> of all <see cref="TierListEntity"/> objects in the data source.
@@ -70,7 +70,7 @@ public interface ITierListRepository : IRepository<TierListEntity>
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
     /// <see cref="TierRowEntity"/> objects representing the rows in the specified list. If no rows are found, the
     /// result will be an empty collection.</returns>
-    Task<IEnumerable<TierRowEntity>> GetRowsAsync(int listId);
+    Task<List<TierRowEntity>> GetRowsAsync(int listId);
 
     /// <summary>
     /// Asynchronously retrieves a collection of rows that contain images for the specified list.
@@ -79,7 +79,7 @@ public interface ITierListRepository : IRepository<TierListEntity>
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
     /// <see cref="TierRowEntity"/> objects, where each object represents a row containing an image. Returns an empty
     /// collection if no rows with images are found.</returns>
-    Task<IEnumerable<TierRowEntity>> GetRowsWithImagesAsync(int listId);
+    Task<List<TierRowEntity>> GetRowsWithImagesAsync(int listId);
 
     /// <summary>
     /// Retrieves a queryable collection of rows associated with the specified list ID.
@@ -112,7 +112,7 @@ public interface ITierListRepository : IRepository<TierListEntity>
     /// <returns>A task that represents the asynchronous operation. The task result contains an <see cref="IEnumerable{T}"/> of
     /// <see cref="TierImageEntity"/> objects representing the images associated with the specified row.  If no images
     /// are found, the collection will be empty.</returns>
-    Task<IEnumerable<TierImageEntity>> GetImagesAsync(int rowId);
+    Task<List<TierImageEntity>> GetImagesAsync(int rowId);
 
     /// <summary>
     /// Retrieves a queryable collection of image entities associated with the specified row ID.
