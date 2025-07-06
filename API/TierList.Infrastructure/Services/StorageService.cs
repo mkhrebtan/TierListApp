@@ -1,10 +1,10 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
-using TierList.Application.Common.DTOs;
+using TierList.Application.Common.DTOs.TierImage;
 using TierList.Application.Common.Enums;
-using TierList.Application.Common.Interfaces;
 using TierList.Application.Common.Models;
+using TierList.Application.Common.Services;
 using TierList.Infrastructure.Settings;
 
 namespace TierList.Infrastructure.Services;

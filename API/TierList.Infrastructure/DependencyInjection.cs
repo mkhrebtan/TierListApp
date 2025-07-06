@@ -3,7 +3,7 @@ using Amazon.S3;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using TierList.Application.Common.Interfaces;
+using TierList.Application.Common.Services;
 using TierList.Infrastructure.Services;
 using TierList.Infrastructure.Settings;
 
