@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TierList.Application.Common.Interfaces;
 using TierList.Application.Common.Services;
 
 namespace TierList.Application;
@@ -19,6 +18,8 @@ public static class DependencyInjection
     /// <param name="services">The <see cref="IServiceCollection"/> to which the services will be added.</param>
     public static void AddApplicationServices(this IServiceCollection services)
     {
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITierListService, TierListService>();
     }
 }
