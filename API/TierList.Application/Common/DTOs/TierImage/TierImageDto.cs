@@ -1,6 +1,4 @@
-﻿using TierList.Application.Common.Interfaces;
-
-namespace TierList.Application.Common.DTOs.TierImage;
+﻿namespace TierList.Application.Common.DTOs.TierImage;
 
 /// <summary>
 /// Represents an image associated with a specific tier, including metadata such as its URL, note, and order within a
@@ -8,7 +6,7 @@ namespace TierList.Application.Common.DTOs.TierImage;
 /// </summary>
 /// <remarks>This data transfer object (DTO) is typically used to encapsulate information about tier images for
 /// transport between application layers.</remarks>
-public class TierImageDto : ITierImageDto
+public class TierImageDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

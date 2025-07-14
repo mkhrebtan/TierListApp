@@ -1,8 +1,6 @@
-﻿using TierList.Application.Common.Interfaces;
+﻿namespace TierList.Application.Common.DTOs.TierRow;
 
-namespace TierList.Application.Common.DTOs.TierRow;
-
-public class TierRowBriefDto : ITierRowDto
+public class TierRowBriefDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

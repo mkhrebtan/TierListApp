@@ -1,5 +1,4 @@
 ﻿using TierList.Application.Common.DTOs.TierRow;
-using TierList.Application.Common.Interfaces;
 
 namespace TierList.Application.Common.DTOs.TierList;
 
@@ -10,7 +9,7 @@ namespace TierList.Application.Common.DTOs.TierList;
 /// <remarks>This DTO is used to encapsulate the data structure of a tier list, which includes a unique
 /// identifier, a title,  a collection of tier rows, and a backup row. It is designed to be immutable and is typically
 /// used for transferring  tier list data between application layers or services.</remarks>
-public class TierListDataDto : ITierListDto
+public class TierListDataDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

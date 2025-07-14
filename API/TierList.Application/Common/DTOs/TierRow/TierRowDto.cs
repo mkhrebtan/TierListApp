@@ -1,5 +1,4 @@
 ﻿using TierList.Application.Common.DTOs.TierImage;
-using TierList.Application.Common.Interfaces;
 
 namespace TierList.Application.Common.DTOs.TierRow;
 
@@ -10,7 +9,7 @@ namespace TierList.Application.Common.DTOs.TierRow;
 /// <remarks>This class is typically used to encapsulate tier-related data for transfer between application layers
 /// or services. It includes properties for identifying the tier, its rank, display color, order, and associated
 /// images.</remarks>
-public class TierRowDto : ITierRowDto
+public class TierRowDto
 {
     /// <summary>
     /// Gets the unique identifier for the entity.

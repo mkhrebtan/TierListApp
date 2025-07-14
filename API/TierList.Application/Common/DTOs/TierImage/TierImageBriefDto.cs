@@ -1,8 +1,6 @@
-﻿using TierList.Application.Common.Interfaces;
+﻿namespace TierList.Application.Common.DTOs.TierImage;
 
-namespace TierList.Application.Common.DTOs.TierImage;
-
-public class TierImageBriefDto : ITierImageDto
+public class TierImageBriefDto
 {
     public Guid StorageKey { get; init; }
 
