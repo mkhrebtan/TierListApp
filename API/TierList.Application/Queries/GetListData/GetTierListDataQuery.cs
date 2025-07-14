@@ -1,6 +1,9 @@
-﻿namespace TierList.Application.Queries;
+﻿using TierList.Application.Common.DTOs.TierList;
+using TierList.Application.Common.Interfaces;
 
-public record GetTierListDataQuery
+namespace TierList.Application.Queries.GetListData;
+
+public sealed record GetTierListDataQuery : IQuery<TierListDataDto>
 {
     /// <summary>
     /// Gets the unique identifier for the entity.
