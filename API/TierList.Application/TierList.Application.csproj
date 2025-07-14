@@ -25,4 +25,8 @@
     <ProjectReference Include="..\TierList.Domain\TierList.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\Errors\" />
+  </ItemGroup>
+
 </Project>
