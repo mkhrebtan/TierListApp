@@ -2,7 +2,6 @@
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using TierList.Application.Common.DTOs.TierImage;
-using TierList.Application.Common.Enums;
 using TierList.Application.Common.Models;
 using TierList.Application.Common.Services;
 using TierList.Infrastructure.Settings;
@@ -20,7 +19,7 @@ public class StorageService : IImageStorageService
         _s3Settings = s3Settings;
     }
 
-    public async Task<TierImageResult> GetImageUploadUrlAsync(string fileName, string contentType)
+    public async Task<Result<TierImageBriefDto>> GetImageUploadUrlAsync(string fileName, string contentType)
     {
         try
         {
@@ -40,7 +39,7 @@ public class StorageService : IImageStorageService
 
             string url = await _s3Client.GetPreSignedURLAsync(request);
 
-            return TierImageResult.Success(new TierImageBriefDto
+            return Result<TierImageBriefDto>.Success(new TierImageBriefDto
             {
                 Url = url,
                 StorageKey = key,
@@ -48,11 +47,11 @@ public class StorageService : IImageStorageService
         }
         catch (AmazonS3Exception ex)
         {
-            return TierImageResult.Failure(ex.Message, ErrorType.UnexpectedError);
+            return Result<TierImageBriefDto>.Failure(new Error("UnexpectedError", ex.Message));
         }
     }
 
-    public async Task<TierImageResult> DeleteImageAsync(Guid key)
+    public async Task<Result> DeleteImageAsync(Guid key)
     {
         try
         {
@@ -63,11 +62,11 @@ public class StorageService : IImageStorageService
             };
 
             await _s3Client.DeleteObjectAsync(request);
-            return TierImageResult.Success();
+            return Result.Success();
         }
         catch (AmazonS3Exception ex)
         {
-            return TierImageResult.Failure(ex.Message, ErrorType.UnexpectedError);
+            return Result.Failure(new Error("UnexpectedError", ex.Message));
         }
     }
 }
