@@ -1,10 +1,11 @@
-﻿using TierList.Application.Common.Models;
+﻿using TierList.Application.Common.DTOs.TierImage;
+using TierList.Application.Common.Models;
 
 namespace TierList.Application.Common.Services;
 
 public interface IImageStorageService
 {
-    Task<TierImageResult> GetImageUploadUrlAsync(string fileName, string contentType);
+    Task<Result<TierImageBriefDto>> GetImageUploadUrlAsync(string fileName, string contentType);
 
-    Task<TierImageResult> DeleteImageAsync(Guid key);
+    Task<Result> DeleteImageAsync(Guid key);
 }

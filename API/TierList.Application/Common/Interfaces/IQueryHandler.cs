@@ -1,7 +1,9 @@
-﻿namespace TierList.Application.Common.Interfaces;
+﻿using TierList.Application.Common.Models;
+
+namespace TierList.Application.Common.Interfaces;
 
 public interface IQueryHandler<in TQuery, TResponse>
     where TQuery : IQuery<TResponse>
 {
-    Task<TResponse> Handle(TQuery query);
+    Task<Result<TResponse>> Handle(TQuery query);
 }
