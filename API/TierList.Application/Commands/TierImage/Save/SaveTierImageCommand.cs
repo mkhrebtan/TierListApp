@@ -1,6 +1,9 @@
-﻿namespace TierList.Application.Commands.TierImage;
+﻿using TierList.Application.Common.DTOs.TierImage;
+using TierList.Application.Common.Interfaces;
 
-public record SaveTierImageCommand
+namespace TierList.Application.Commands.TierImage.Save;
+
+public sealed record SaveTierImageCommand : ICommand<TierImageDto>
 {
     required public Guid StorageKey { get; init; }
 

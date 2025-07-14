@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using TierList.Application.Common.DTOs.TierImage;
+using TierList.Application.Common.Interfaces;
 
-namespace TierList.Application.Commands.TierImage;
+namespace TierList.Application.Commands.TierImage.Move;
 
-public record MoveTierImageCommand
+public sealed record MoveTierImageCommand : ICommand<TierImageDto>
 {
     required public int Id { get; init; }
 
