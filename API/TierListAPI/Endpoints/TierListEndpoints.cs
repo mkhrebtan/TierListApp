@@ -1,9 +1,11 @@
 ﻿using System.Security.Claims;
-using TierList.Application.Commands.TierList;
-using TierList.Application.Common.Enums;
-using TierList.Application.Common.Models;
-using TierList.Application.Common.Services;
-using TierList.Application.Queries;
+using TierList.Application.Commands.TierList.Create;
+using TierList.Application.Commands.TierList.Delete;
+using TierList.Application.Commands.TierList.Update;
+using TierList.Application.Common.DTOs.TierList;
+using TierList.Application.Common.Interfaces;
+using TierList.Application.Queries.GetListData;
+using TierList.Application.Queries.GetLists;
 using TierListAPI.Helpers;
 
 namespace TierListAPI.Endpoints;
@@ -12,23 +14,26 @@ internal static class TierListEndpoints
 {
     internal static void MapTierListEndpoints(this WebApplication app)
     {
-        app.MapGet("/lists", async (HttpContext context, ITierListService service)
-            => await GetTierLists(context, service)).RequireAuthorization();
+        app.MapGet("/lists", async (HttpContext context, IQueryHandler<GetTierListsQuery, IReadOnlyCollection<TierListBriefDto>> queryHandler)
+            => await GetTierLists(context, queryHandler)).RequireAuthorization();
 
-        app.MapGet("/lists/{listId}", async (HttpContext context, int listId, ITierListService service)
-            => await GetTierListData(context, listId, service)).RequireAuthorization();
+        app.MapGet("/lists/{listId}", async (HttpContext context, int listId, IQueryHandler<GetTierListDataQuery, TierListDataDto> queryHandler)
+            => await GetTierListData(context, listId, queryHandler)).RequireAuthorization();
 
-        app.MapPost("/lists", async (HttpContext context, CreateTierListCommand request, ITierListService service)
-            => await CreateTierList(context, request, service)).RequireAuthorization();
+        app.MapPost("/lists", async (HttpContext context, CreateTierListCommand request, ICommandHandler<CreateTierListCommand, TierListBriefDto> commandHandler)
+            => await CreateTierList(context, request, commandHandler)).RequireAuthorization();
 
-        app.MapPut("lists/{listId}", async (HttpContext context, int listId, UpdateTierListCommand request, ITierListService service) 
-            => await UpdateTierList(context, listId, request, service)).RequireAuthorization();
+        app.MapPut("lists/{listId}", async (HttpContext context, int listId, UpdateTierListCommand request, ICommandHandler<UpdateTierListCommand, TierListBriefDto> commandHandler)
+            => await UpdateTierList(context, listId, request, commandHandler)).RequireAuthorization();
 
-        app.MapDelete("/lists/{listId}", async (HttpContext context, int listId, ITierListService service) 
-            => await DeleteTierList(context, listId, service)).RequireAuthorization();
+        app.MapDelete("/lists/{listId}", async (HttpContext context, int listId, ICommandHandler<DeleteTierListCommand> commandHandler)
+            => await DeleteTierList(context, listId, commandHandler)).RequireAuthorization();
     }
 
-    private static async Task<IResult> GetTierLists(HttpContext context, ITierListService service)
+    private static async Task<IResult> GetTierLists(
+        HttpContext context,
+        IQueryHandler<GetTierListsQuery,
+        IReadOnlyCollection<TierListBriefDto>> queryHandler)
     {
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)
                        ?? context.User.FindFirst("sub");
@@ -39,17 +44,20 @@ internal static class TierListEndpoints
         }
 
         var query = new GetTierListsQuery { UserId = userId };
-        var result = await service.GetTierListsAsync(query);
+        var result = await queryHandler.Handle(query);
 
         if (!result.IsSuccess)
         {
-            return ErrorHandler.HandleError((ErrorType)result.ErrorType!, result.ErrorMessage!);
+            return ErrorHandler.HandleError(result.Error);
         }
 
-        return TypedResults.Ok(result.TierListsData);
+        return TypedResults.Ok(result.Value);
     }
 
-    private static async Task<IResult> GetTierListData(HttpContext context, int listId, ITierListService service)
+    private static async Task<IResult> GetTierListData(
+        HttpContext context,
+        int listId,
+        IQueryHandler<GetTierListDataQuery, TierListDataDto> queryHandler)
     {
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier) ??
                               context.User.FindFirst("sub") ??
@@ -61,16 +69,19 @@ internal static class TierListEndpoints
         }
 
         GetTierListDataQuery query = new GetTierListDataQuery { Id = listId, UserId = userId };
-        TierListResult result = await service.GetTierListDataAsync(query);
+        var result = await queryHandler.Handle(query);
         if (!result.IsSuccess)
         {
-            return ErrorHandler.HandleError((ErrorType)result.ErrorType!, result.ErrorMessage!);
+            return ErrorHandler.HandleError(result.Error);
         }
 
-        return TypedResults.Ok(result.TierListData);
+        return TypedResults.Ok(result.Value);
     }
 
-    private static async Task<IResult> CreateTierList(HttpContext context, CreateTierListCommand request, ITierListService service)
+    private static async Task<IResult> CreateTierList(
+        HttpContext context,
+        CreateTierListCommand command,
+        ICommandHandler<CreateTierListCommand, TierListBriefDto> commandHandler)
     {
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier) ??
                               context.User.FindFirst("sub") ??
@@ -81,19 +92,23 @@ internal static class TierListEndpoints
             return TypedResults.Unauthorized();
         }
 
-        request.UserId = userId;
-        TierListResult commandResult = await service.CreateTierListAsync(request);
-        if (!commandResult.IsSuccess)
+        command.UserId = userId;
+        var result = await commandHandler.Handle(command);
+        if (!result.IsSuccess)
         {
-            return ErrorHandler.HandleError((ErrorType)commandResult.ErrorType!, commandResult.ErrorMessage!);
+            return ErrorHandler.HandleError(result.Error);
         }
 
-        return Results.Created($"/lists/{commandResult.TierListData?.Id}", commandResult.TierListData);
+        return Results.Created($"/lists/{result.Value.Id}", result.Value);
     }
 
-    private static async Task<IResult> UpdateTierList(HttpContext context, int listId, UpdateTierListCommand request, ITierListService service)
+    private static async Task<IResult> UpdateTierList(
+        HttpContext context,
+        int listId,
+        UpdateTierListCommand command,
+        ICommandHandler<UpdateTierListCommand, TierListBriefDto> commandHandler)
     {
-        if (listId != request.Id)
+        if (listId != command.Id)
         {
             return TypedResults.BadRequest("List ID in the URL does not match the ID in the request body.");
         }
@@ -107,17 +122,20 @@ internal static class TierListEndpoints
             return TypedResults.Unauthorized();
         }
 
-        request.UserId = userId;
-        TierListResult commandResult = await service.UpdateTierListAsync(request);
-        if (!commandResult.IsSuccess)
+        command.UserId = userId;
+        var result = await commandHandler.Handle(command);
+        if (!result.IsSuccess)
         {
-            return ErrorHandler.HandleError((ErrorType)commandResult.ErrorType!, commandResult.ErrorMessage!);
+            return ErrorHandler.HandleError(result.Error);
         }
 
-        return TypedResults.Ok(commandResult.TierListData);
+        return TypedResults.Ok(result.Value);
     }
 
-    private static async Task<IResult> DeleteTierList(HttpContext context, int listId, ITierListService service)
+    private static async Task<IResult> DeleteTierList(
+        HttpContext context,
+        int listId,
+        ICommandHandler<DeleteTierListCommand> commandHandler)
     {
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier) ??
                           context.User.FindFirst("sub") ??
@@ -128,10 +146,10 @@ internal static class TierListEndpoints
             return TypedResults.Unauthorized();
         }
 
-        TierListResult commandResult = await service.DeleteTierListAsync(new DeleteTierListCommand { Id = listId, UserId = userId });
-        if (!commandResult.IsSuccess)
+        var result = await commandHandler.Handle(new DeleteTierListCommand { Id = listId, UserId = userId });
+        if (!result.IsSuccess)
         {
-            return ErrorHandler.HandleError((ErrorType)commandResult.ErrorType!, commandResult.ErrorMessage!);
+            return ErrorHandler.HandleError(result.Error);
         }
 
         return TypedResults.NoContent();

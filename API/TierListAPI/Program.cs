@@ -1,26 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System.Security.Claims;
-using System.Text;
 using TierList.Application;
-using TierList.Application.Commands.TierImage;
-using TierList.Application.Commands.TierList;
-using TierList.Application.Commands.TierRow;
-using TierList.Application.Commands.User;
-using TierList.Application.Common.DTOs.TierList;
-using TierList.Application.Common.Enums;
-using TierList.Application.Common.Models;
-using TierList.Application.Common.Services;
 using TierList.Application.Common.Settings;
-using TierList.Application.Queries;
-using TierList.Domain.Entities;
 using TierList.Infrastructure;
 using TierList.Persistence.Postgres;
 using TierListAPI.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var assemblyName = typeof(Program).Assembly.GetName().Name;
 
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
