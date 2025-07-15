@@ -25,22 +25,6 @@ internal sealed class DeleteTierImageCommandHandler : ICommandHandler<DeleteTier
 
     public async Task<Result> Handle(DeleteTierImageCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result.Failure(
-                new Error("Validation", "Invalid image ID provided."));
-        }
-        else if (command.ListId <= 0)
-        {
-            return Result.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-        else if (command.ContainerId <= 0)
-        {
-            return Result.Failure(
-                new Error("Validation", "Invalid container ID provided."));
-        }
-
         TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
         if (listEntity is null)
         {

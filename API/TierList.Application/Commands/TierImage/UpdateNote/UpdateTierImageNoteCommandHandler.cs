@@ -22,22 +22,6 @@ internal sealed class UpdateTierImageNoteCommandHandler : ICommandHandler<Update
 
     public async Task<Result<TierImageDto>> Handle(UpdateTierImageNoteCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Invalid image ID provided."));
-        }
-        else if (command.ListId <= 0)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-        else if (command.ContainerId <= 0)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Invalid container ID provided."));
-        }
-
         TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
         if (listEntity is null)
         {

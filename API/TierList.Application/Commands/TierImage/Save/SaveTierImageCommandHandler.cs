@@ -22,32 +22,6 @@ internal sealed class SaveTierImageCommandHandler : ICommandHandler<SaveTierImag
 
     public async Task<Result<TierImageDto>> Handle(SaveTierImageCommand command)
     {
-        if (string.IsNullOrEmpty(command.Url))
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Image URL cannot be empty."));
-        }
-        else if (command.StorageKey == Guid.Empty)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Storage key must be a valid GUID."));
-        }
-        else if (command.Order < 0)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Order must be a non-negative integer."));
-        }
-        else if (command.ContainerId <= 0)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Invalid container ID provided."));
-        }
-        else if (command.ListId <= 0)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-
         TierImageContainer? container = await _tierListRepository.GetBackupRowAsync(command.ListId);
         if (container is null)
         {
