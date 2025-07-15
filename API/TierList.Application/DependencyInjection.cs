@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 using TierList.Application.Commands.JwtUser.Login;
 using TierList.Application.Commands.JwtUser.RefreshToken;
 using TierList.Application.Commands.JwtUser.Register;
@@ -40,39 +42,38 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
 
         // Commands
+        RegisterHandlers(services);
 
-        // TierList
-        services.AddScoped<ICommandHandler<CreateTierListCommand, TierListBriefDto>, CreateTierListCommandHandler>();
-        services.AddScoped<ICommandHandler<UpdateTierListCommand, TierListBriefDto>, UpdateTierListCommandHandler>();
-        services.AddScoped<ICommandHandler<DeleteTierListCommand>, DeleteTierListCommandHandler>();
+        // Validators
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+    }
 
-        // TierRow
-        services.AddScoped<ICommandHandler<CreateTierRowCommand, TierRowBriefDto>, CreateTierRowCommandHandler>();
-        services.AddScoped<ICommandHandler<UpdateTierRowColorCommand, TierRowBriefDto>, UpdateTierRowColorCommandHandler>();
-        services.AddScoped<ICommandHandler<UpdateTierRowOrderCommand, TierRowBriefDto>, UpdateTierRowOrderCommandHandler>();
-        services.AddScoped<ICommandHandler<UpdateTierRowRankCommand, TierRowBriefDto>, UpdateTierRowRankCommandHandler>();
-        services.AddScoped<ICommandHandler<DeleteTierRowCommand>, DeleteTierRowCommandHandler>();
+    private static void RegisterHandlers(IServiceCollection services)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var types = assembly.GetTypes();
 
-        // TierImage
-        services.AddScoped<ICommandHandler<SaveTierImageCommand, TierImageDto>, SaveTierImageCommandHandler>();
-        services.AddScoped<ICommandHandler<ReorderTierImageCommand, TierImageDto>, ReorderTierImageCommandHandler>();
-        services.AddScoped<ICommandHandler<MoveTierImageCommand, TierImageDto>, MoveTierImageCommandHandler>();
-        services.AddScoped<ICommandHandler<UpdateTierImageNoteCommand, TierImageDto>, UpdateTierImageNoteCommandHandler>();
-        services.AddScoped<ICommandHandler<UpdateTierImageUrlCommand, TierImageDto>, UpdateTierImageUrlCommandHandler>();
-        services.AddScoped<ICommandHandler<DeleteTierImageCommand>, DeleteTierImageCommandHandler>();
+        foreach (var type in types)
+        {
+            if (type.IsClass && !type.IsAbstract)
+            {
+                var interfaces = type.GetInterfaces();
 
-        // User
-        services.AddScoped<ICommandHandler<RegisterUserCommand, RegisterUserDto>, RegisterUserCommandHandler>();
-        services.AddScoped<ICommandHandler<LoginUserCommand, LoginUserDto>, LoginUserCommandHandler>();
-        services.AddScoped<ICommandHandler<RefreshTokenCommand, LoginUserDto>, RefreshTokenCommandHandler>();
+                foreach (var interfaceType in interfaces)
+                {
+                    if (interfaceType.IsGenericType)
+                    {
+                        var genericDefinition = interfaceType.GetGenericTypeDefinition();
 
-        // Queries
-
-        // TierList
-        services.AddScoped<IQueryHandler<GetTierListsQuery, IReadOnlyCollection<TierListBriefDto>>, GetTierListsQueryHandler>();
-        services.AddScoped<IQueryHandler<GetTierListDataQuery, TierListDataDto>, GetTierListDataQueryHandler>();
-
-        // TierImage
-        services.AddScoped<IQueryHandler<GetTierImageUploadUrlQuery, TierImageBriefDto>, GetTierImageUploadUrlQueryHandler>();
+                        if (genericDefinition == typeof(ICommandHandler<>) ||
+                            genericDefinition == typeof(ICommandHandler<,>) ||
+                            genericDefinition == typeof(IQueryHandler<,>))
+                        {
+                            services.AddScoped(interfaceType, type);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

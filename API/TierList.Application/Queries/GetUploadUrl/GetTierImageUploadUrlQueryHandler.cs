@@ -16,12 +16,6 @@ internal sealed class GetTierImageUploadUrlQueryHandler : IQueryHandler<GetTierI
 
     public async Task<Result<TierImageBriefDto>> Handle(GetTierImageUploadUrlQuery query)
     {
-        if (string.IsNullOrEmpty(query.FileName) || string.IsNullOrEmpty(query.ContentType))
-        {
-            return Result<TierImageBriefDto>.Failure(
-                new Error("Validation", "File name and content type cannot be empty."));
-        }
-
         return await _imageStorageService.GetImageUploadUrlAsync(query.FileName, query.ContentType);
     }
 }

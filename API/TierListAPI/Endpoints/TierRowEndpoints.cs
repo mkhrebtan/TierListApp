@@ -1,4 +1,5 @@
-﻿using TierList.Application.Commands.TierRow;
+﻿using FluentValidation;
+using TierList.Application.Commands.TierRow;
 using TierList.Application.Commands.TierRow.Create;
 using TierList.Application.Commands.TierRow.Delete;
 using TierList.Application.Commands.TierRow.UpdateOrder;
@@ -13,26 +14,48 @@ internal static class TierRowEndpoints
 {
     internal static void MapTierRowEndpoints(this WebApplication app)
     {
-        app.MapPost("/rows", async (CreateTierRowCommand request, ICommandHandler<CreateTierRowCommand, TierRowBriefDto> commandHandler)
-            => await CreateTierRow(request, commandHandler)).RequireAuthorization();
+        app.MapPost("/rows", async (
+            CreateTierRowCommand request,
+            ICommandHandler<CreateTierRowCommand, TierRowBriefDto> commandHandler,
+            IValidator<CreateTierRowCommand> validator) => await CreateTierRow(request, commandHandler, validator)).RequireAuthorization();
 
-        app.MapPut("/rows/{rowId}/rank", async (int rowId, UpdateTierRowRankCommand request, ICommandHandler<UpdateTierRowRankCommand, TierRowBriefDto> commandHandler)
-            => await UpdateTierRowRank(rowId, request, commandHandler)).RequireAuthorization();
+        app.MapPut("/rows/{rowId}/rank", async (
+            int rowId,
+            UpdateTierRowRankCommand request,
+            ICommandHandler<UpdateTierRowRankCommand, TierRowBriefDto> commandHandler,
+            IValidator<UpdateTierRowRankCommand> validator) => await UpdateTierRowRank(rowId, request, commandHandler, validator)).RequireAuthorization();
 
-        app.MapPut("/rows/{rowId}/color", async (int rowId, UpdateTierRowColorCommand request, ICommandHandler<UpdateTierRowColorCommand, TierRowBriefDto> commandHandler)
-            => await UpdateTierRowColor(rowId, request, commandHandler)).RequireAuthorization();
+        app.MapPut("/rows/{rowId}/color", async (
+            int rowId,
+            UpdateTierRowColorCommand request,
+            ICommandHandler<UpdateTierRowColorCommand, TierRowBriefDto> commandHandler,
+            IValidator<UpdateTierRowColorCommand> validator) => await UpdateTierRowColor(rowId, request, commandHandler, validator)).RequireAuthorization();
 
-        app.MapPut("/rows/{rowId}/order", async (int rowId, UpdateTierRowOrderCommand request, ICommandHandler<UpdateTierRowOrderCommand, TierRowBriefDto> commandHandler)
-            => await UpdateTierRowOrder(rowId, request, commandHandler)).RequireAuthorization();
+        app.MapPut("/rows/{rowId}/order", async (
+            int rowId,
+            UpdateTierRowOrderCommand request,
+            ICommandHandler<UpdateTierRowOrderCommand, TierRowBriefDto> commandHandler,
+            IValidator<UpdateTierRowOrderCommand> validator) => await UpdateTierRowOrder(rowId, request, commandHandler, validator)).RequireAuthorization();
 
-        app.MapDelete("/rows/{rowId}", async (int rowId, int listId, bool isDeleteWithImages, ICommandHandler<DeleteTierRowCommand> commandHandler)
-            => await DeleteTierRow(rowId, listId, isDeleteWithImages, commandHandler)).RequireAuthorization();
+        app.MapDelete("/rows/{rowId}", async (
+            int rowId,
+            int listId,
+            bool isDeleteWithImages,
+            ICommandHandler<DeleteTierRowCommand> commandHandler,
+            IValidator<DeleteTierRowCommand> validator) => await DeleteTierRow(rowId, listId, isDeleteWithImages, commandHandler, validator)).RequireAuthorization();
     }
 
     private static async Task<IResult> CreateTierRow(
         CreateTierRowCommand command,
-        ICommandHandler<CreateTierRowCommand, TierRowBriefDto> commandHandler)
+        ICommandHandler<CreateTierRowCommand, TierRowBriefDto> commandHandler,
+        IValidator<CreateTierRowCommand> validator)
     {
+        var validationResult = await validator.ValidateAsync(command);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+        }
+
         var result = await commandHandler.Handle(command);
         if (!result.IsSuccess)
         {
@@ -45,11 +68,18 @@ internal static class TierRowEndpoints
     private static async Task<IResult> UpdateTierRowRank(
         int rowId,
         UpdateTierRowRankCommand command,
-        ICommandHandler<UpdateTierRowRankCommand, TierRowBriefDto> commandHandler)
+        ICommandHandler<UpdateTierRowRankCommand, TierRowBriefDto> commandHandler,
+        IValidator<UpdateTierRowRankCommand> validator)
     {
         if (rowId != command.Id)
         {
             return TypedResults.BadRequest("Row ID in the URL does not match the ID in the request body.");
+        }
+
+        var validationResult = await validator.ValidateAsync(command);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
         var result = await commandHandler.Handle(command);
@@ -64,11 +94,18 @@ internal static class TierRowEndpoints
     private static async Task<IResult> UpdateTierRowColor(
         int rowId,
         UpdateTierRowColorCommand command,
-        ICommandHandler<UpdateTierRowColorCommand, TierRowBriefDto> commandHandler)
+        ICommandHandler<UpdateTierRowColorCommand, TierRowBriefDto> commandHandler,
+        IValidator<UpdateTierRowColorCommand> validator)
     {
         if (rowId != command.Id)
         {
             return TypedResults.BadRequest("Row ID in the URL does not match the ID in the request body.");
+        }
+
+        var validationResult = await validator.ValidateAsync(command);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
         var result = await commandHandler.Handle(command);
@@ -83,11 +120,18 @@ internal static class TierRowEndpoints
     private static async Task<IResult> UpdateTierRowOrder(
         int rowId,
         UpdateTierRowOrderCommand command,
-        ICommandHandler<UpdateTierRowOrderCommand, TierRowBriefDto> commandHandler)
+        ICommandHandler<UpdateTierRowOrderCommand, TierRowBriefDto> commandHandler,
+        IValidator<UpdateTierRowOrderCommand> validator)
     {
         if (rowId != command.Id)
         {
             return TypedResults.BadRequest("Row ID in the URL does not match the ID in the request body.");
+        }
+
+        var validationResult = await validator.ValidateAsync(command);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
         var result = await commandHandler.Handle(command);
@@ -103,9 +147,18 @@ internal static class TierRowEndpoints
         int rowId,
         int listId,
         bool isDeleteWithImages,
-        ICommandHandler<DeleteTierRowCommand> commandHandler)
+        ICommandHandler<DeleteTierRowCommand> commandHandler,
+        IValidator<DeleteTierRowCommand> validator)
     {
-        var result = await commandHandler.Handle(new DeleteTierRowCommand { Id = rowId, ListId = listId, IsDeleteWithImages = isDeleteWithImages });
+        DeleteTierRowCommand command = new DeleteTierRowCommand { Id = rowId, ListId = listId, IsDeleteWithImages = isDeleteWithImages };
+
+        var validationResult = await validator.ValidateAsync(command);
+        if (!validationResult.IsValid)
+        {
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        var result = await commandHandler.Handle(command);
         if (!result.IsSuccess)
         {
             return ErrorHandler.HandleError(result.Error);
