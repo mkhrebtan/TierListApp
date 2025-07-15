@@ -22,27 +22,6 @@ internal sealed class UpdateTierListCommandHandler : ICommandHandler<UpdateTierL
 
     public async Task<Result<TierListBriefDto>> Handle(UpdateTierListCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-        else if (string.IsNullOrEmpty(command.Title))
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "List title cannot be empty."));
-        }
-        else if (command.UserId <= 0)
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "Invalid user ID provided."));
-        }
-        else if (command.Title.Length > 100)
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "List title cannot exceed 100 characters."));
-        }
-
         TierListEntity? existingList = await _tierListRepository.GetByIdAsync(command.Id);
         if (existingList is null)
         {

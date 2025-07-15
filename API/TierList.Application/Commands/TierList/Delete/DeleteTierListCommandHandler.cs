@@ -21,17 +21,6 @@ internal sealed class DeleteTierListCommandHandler : ICommandHandler<DeleteTierL
 
     public async Task<Result> Handle(DeleteTierListCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-        else if (command.UserId <= 0)
-        {
-            return Result.Failure(
-                new Error("Validation", "Invalid user ID provided."));
-        }
-
         TierListEntity? listToDelete = await _tierListRepository.GetByIdAsync(command.Id);
         if (listToDelete is null)
         {

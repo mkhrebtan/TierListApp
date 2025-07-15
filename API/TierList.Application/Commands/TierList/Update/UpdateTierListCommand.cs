@@ -14,10 +14,10 @@ public sealed record UpdateTierListCommand : ICommand<TierListBriefDto>
     /// <summary>
     /// Gets the title associated with the object.
     /// </summary>
-    public string? Title { get; init; }
+    required public string Title { get; init; }
 
     /// <summary>
-    /// Gets the unique identifier for the user.
+    /// Gets or sets the unique identifier for the user.
     /// </summary>
     [JsonIgnore]
     public int UserId { get; set; }

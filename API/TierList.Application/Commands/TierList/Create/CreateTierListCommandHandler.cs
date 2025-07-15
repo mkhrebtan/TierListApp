@@ -22,22 +22,6 @@ internal sealed class CreateTierListCommandHandler : ICommandHandler<CreateTierL
 
     public async Task<Result<TierListBriefDto>> Handle(CreateTierListCommand command)
     {
-        if (string.IsNullOrEmpty(command.Title))
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "List title cannot be empty."));
-        }
-        else if (command.Title.Length > 100)
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "List title cannot exceed 100 characters."));
-        }
-        else if (command.UserId <= 0)
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", "Invalid user ID provided."));
-        }
-
         TierListEntity tierList = new()
         {
             Title = command.Title,

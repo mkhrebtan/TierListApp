@@ -19,17 +19,6 @@ internal sealed class GetTierListDataQueryHandler : IQueryHandler<GetTierListDat
 
     public async Task<Result<TierListDataDto>> Handle(GetTierListDataQuery query)
     {
-        if (query.Id <= 0)
-        {
-            return Result<TierListDataDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-        else if (query.UserId <= 0)
-        {
-            return Result<TierListDataDto>.Failure(
-                new Error("Validation", "Invalid user ID provided."));
-        }
-
         TierListEntity? tierList = await _tierListRepository.GetByIdAsync(query.Id);
         if (tierList is null)
         {
