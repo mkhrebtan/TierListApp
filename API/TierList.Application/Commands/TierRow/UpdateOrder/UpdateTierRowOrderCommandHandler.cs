@@ -22,17 +22,6 @@ internal sealed class UpdateTierRowOrderCommandHandler : ICommandHandler<UpdateT
 
     public async Task<Result<TierRowBriefDto>> Handle(UpdateTierRowOrderCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid row ID provided."));
-        }
-        else if (command.ListId <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-
         TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
         if (listEntity is null)
         {

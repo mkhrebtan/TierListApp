@@ -23,34 +23,6 @@ internal sealed class CreateTierRowCommandHandler : ICommandHandler<CreateTierRo
 
     public async Task<Result<TierRowBriefDto>> Handle(CreateTierRowCommand command)
     {
-        if (command.ListId <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-        else if (string.IsNullOrEmpty(command.Rank))
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Rank cannot be empty."));
-        }
-        else if (string.IsNullOrEmpty(command.ColorHex))
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "ColorHex cannot be empty."));
-        }
-        else if (command.Order is not null && command.Order <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Order must be a positive integer or null."));
-        }
-
-        Regex colorHexRegex = new(@"^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$");
-        if (!colorHexRegex.IsMatch(command.ColorHex))
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "ColorHex must be a valid hexadecimal color code."));
-        }
-
         TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
         if (listEntity is null)
         {

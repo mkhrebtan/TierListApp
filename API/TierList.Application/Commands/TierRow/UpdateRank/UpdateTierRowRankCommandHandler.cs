@@ -22,17 +22,6 @@ internal sealed class UpdateTierRowRankCommandHandler : ICommandHandler<UpdateTi
 
     public async Task<Result<TierRowBriefDto>> Handle(UpdateTierRowRankCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid row ID provided."));
-        }
-        else if (command.ListId <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-
         TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
         if (listEntity is null)
         {
@@ -50,16 +39,6 @@ internal sealed class UpdateTierRowRankCommandHandler : ICommandHandler<UpdateTi
         {
             return Result<TierRowBriefDto>.Failure(
                 new Error("Validation", "Row does not belong to the specified list."));
-        }
-        else if (string.IsNullOrEmpty(command.Rank))
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Rank cannot be empty."));
-        }
-        else if (command.Rank.Length > 50)
-        {
-             return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Rank cannot exceed 50 characters."));
         }
 
         try

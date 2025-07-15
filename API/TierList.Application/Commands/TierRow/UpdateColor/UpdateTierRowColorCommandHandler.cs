@@ -23,17 +23,6 @@ internal sealed class UpdateTierRowColorCommandHandler : ICommandHandler<UpdateT
 
     public async Task<Result<TierRowBriefDto>> Handle(UpdateTierRowColorCommand command)
     {
-        if (command.Id <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid row ID provided."));
-        }
-        else if (command.ListId <= 0)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid list ID provided."));
-        }
-
         TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
         if (listEntity is null)
         {
@@ -52,12 +41,6 @@ internal sealed class UpdateTierRowColorCommandHandler : ICommandHandler<UpdateT
         {
             return Result<TierRowBriefDto>.Failure(
                 new Error("Validation", "Row does not belong to the specified list."));
-        }
-
-        if (string.IsNullOrEmpty(command.ColorHex) || !Regex.IsMatch(command.ColorHex, "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"))
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Invalid color hex format. Use #RRGGBB or #RGB."));
         }
 
         try
