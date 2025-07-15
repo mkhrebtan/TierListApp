@@ -30,12 +30,6 @@ internal sealed class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenC
 
     public async Task<Result<LoginUserDto>> Handle(RefreshTokenCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.RefreshToken))
-        {
-            return Result<LoginUserDto>.Failure(
-                new Error("Validation", "Refresh token cannot be empty."));
-        }
-
         var existingToken = await _userRepository.GetRefreshTokenAsync(command.RefreshToken);
         if (existingToken == null)
         {

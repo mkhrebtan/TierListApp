@@ -30,22 +30,6 @@ internal sealed class LoginUserCommandHandler : ICommandHandler<LoginUserCommand
 
     public async Task<Result<LoginUserDto>> Handle(LoginUserCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.Username) || string.IsNullOrWhiteSpace(command.Password))
-        {
-            return Result<LoginUserDto>.Failure(
-                new Error("Validation", "Username and password cannot be empty."));
-        }
-        else if (command.Username.Length < 3 || command.Username.Length > 50)
-        {
-            return Result<LoginUserDto>.Failure(
-                new Error("Validation", "Username must be between 3 and 50 characters."));
-        }
-        else if (command.Password.Length < 6 || command.Password.Length > 50)
-        {
-            return Result<LoginUserDto>.Failure(
-                new Error("Validation", "Password must be between 8 and 100 characters."));
-        }
-
         var user = await _userRepository.GetByUsernameAsync(command.Username);
         if (user == null || !BCrypt.Net.BCrypt.Verify(command.Password, user.PasswordHash))
         {

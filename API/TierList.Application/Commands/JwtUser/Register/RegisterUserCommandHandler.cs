@@ -22,22 +22,6 @@ internal sealed class RegisterUserCommandHandler : ICommandHandler<RegisterUserC
 
     public async Task<Result<RegisterUserDto>> Handle(RegisterUserCommand command)
     {
-        if (string.IsNullOrWhiteSpace(command.Username) || string.IsNullOrWhiteSpace(command.Password))
-        {
-            return Result<RegisterUserDto>.Failure(
-                new Error("Validation", "Username and password cannot be empty."));
-        }
-        else if (command.Username.Length < 3 || command.Username.Length > 50)
-        {
-            return Result<RegisterUserDto>.Failure(
-                new Error("Validation", "Username cannot exceed 50 characters."));
-        }
-        else if (command.Password.Length < 6 || command.Password.Length > 50)
-        {
-            return Result<RegisterUserDto>.Failure(
-                new Error("Validation", "Password must be between 6 and 50 characters."));
-        }
-
         var existingUser = await _userRepository.GetByUsernameAsync(command.Username);
         if (existingUser != null)
         {
