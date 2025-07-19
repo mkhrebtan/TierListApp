@@ -1,9 +1,9 @@
 ﻿using TierList.Application.Common.DTOs.TierImage;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Commands.TierImage.Save;
 
@@ -22,39 +22,25 @@ internal sealed class SaveTierImageCommandHandler : ICommandHandler<SaveTierImag
 
     public async Task<Result<TierImageDto>> Handle(SaveTierImageCommand command)
     {
-        TierImageContainer? container = await _tierListRepository.GetBackupRowAsync(command.ListId);
-        if (container is null)
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
+        if (listEntity is null)
         {
             return Result<TierImageDto>.Failure(
-                new Error("UnexpectedError", $"Backup row for list with ID {command.ListId} does not exist."));
-        }
-        else if (container.Id != command.ContainerId)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Provided container with id {command.ContainerId} was not an id of backup row container"));
+                new Error("NotFound", "The specified tier list does not exist."));
         }
 
-        List<TierImageEntity> backupImages = await _tierListRepository.GetImagesAsync(container.Id);
-        int imagesCount = backupImages.Count;
-        if (command.Order > imagesCount + 1)
+        Result<TierImageEntity> imageEntityResult = listEntity.AddImage(command.StorageKey, command.Url);
+        if (!imageEntityResult.IsSuccess)
         {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Order {command.Order} is out of range for the number of images in container {container.Id}."));
+            return Result<TierImageDto>.Failure(imageEntityResult.Error);
         }
 
-        TierImageEntity imageEntity = new()
-        {
-            StorageKey = command.StorageKey,
-            Url = command.Url,
-            Note = command.Note,
-            ContainerId = command.ContainerId,
-            Order = command.Order,
-        };
+        TierImageEntity imageEntity = imageEntityResult.Value;
 
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-            _tierListRepository.AddImage(imageEntity);
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -73,7 +59,7 @@ internal sealed class SaveTierImageCommandHandler : ICommandHandler<SaveTierImag
                 Url = imageEntity.Url,
                 Note = imageEntity.Note,
                 ContainerId = imageEntity.ContainerId,
-                Order = imageEntity.Order,
+                Order = imageEntity.Order.Value,
             });
     }
 }

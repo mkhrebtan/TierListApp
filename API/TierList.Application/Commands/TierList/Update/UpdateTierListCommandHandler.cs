@@ -1,9 +1,9 @@
 ﻿using TierList.Application.Common.DTOs.TierList;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Commands.TierList.Update;
 
@@ -28,14 +28,8 @@ internal sealed class UpdateTierListCommandHandler : ICommandHandler<UpdateTierL
             return Result<TierListBriefDto>.Failure(
                 new Error("NotFound", $"List with ID {command.Id} not found."));
         }
-        else if (existingList.UserId != command.UserId)
-        {
-            return Result<TierListBriefDto>.Failure(
-                new Error("Validation", $"List with ID {command.Id} does not belong to user with ID {command.UserId}."));
-        }
 
-        existingList.Title = command.Title;
-        existingList.LastModified = DateTime.UtcNow;
+        existingList.UpdateTitle(command.Title, command.UserId);
 
         try
         {

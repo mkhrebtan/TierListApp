@@ -1,9 +1,10 @@
 ﻿using TierList.Application.Common.DTOs.TierRow;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
+using TierList.Domain.ValueObjects;
 
 namespace TierList.Application.Commands.TierRow.UpdateOrder;
 
@@ -22,54 +23,25 @@ internal sealed class UpdateTierRowOrderCommandHandler : ICommandHandler<UpdateT
 
     public async Task<Result<TierRowBriefDto>> Handle(UpdateTierRowOrderCommand command)
     {
-        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
         if (listEntity is null)
         {
             return Result<TierRowBriefDto>.Failure(
                 new Error("NotFound", $"List with ID {command.ListId} not found."));
         }
 
-        IEnumerable<TierRowEntity> tierRowEntities = await _tierListRepository.GetRowsAsync(listEntity.Id);
-        TierRowEntity? rowEntity = tierRowEntities.FirstOrDefault(r => r.Id == command.Id);
-        if (rowEntity is null)
+        Result<TierRowEntity> rowEntityResult = listEntity.UpdateRowOrder(command.Id, Order.Create(command.Order).Value);
+        if (!rowEntityResult.IsSuccess)
         {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("NotFound", $"Row with ID {command.Id} not found in list {command.ListId}."));
-        }
-        else if (command.Order > tierRowEntities.Count())
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", $"Order {command.Order} exceeds the number of rows in the list."));
-        }
-        else if (command.Order == rowEntity.Order)
-        {
-            return Result<TierRowBriefDto>.Success(
-                new TierRowBriefDto
-                {
-                    Id = rowEntity.Id,
-                    Rank = rowEntity.Rank,
-                    ColorHex = rowEntity.ColorHex,
-                    Order = rowEntity.Order,
-                });
+            return Result<TierRowBriefDto>.Failure(rowEntityResult.Error);
         }
 
-        var orderedRows = tierRowEntities.OrderBy(r => r.Order).ToList();
-        orderedRows.Remove(rowEntity);
-        orderedRows.Insert(command.Order - 1, rowEntity);
-        for (int i = 0; i < orderedRows.Count; i++)
-        {
-            orderedRows[i].Order = i + 1;
-        }
+        TierRowEntity rowEntity = rowEntityResult.Value;
 
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-
-            foreach (var row in orderedRows)
-            {
-                _tierListRepository.UpdateRow(row);
-            }
-
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -86,7 +58,7 @@ internal sealed class UpdateTierRowOrderCommandHandler : ICommandHandler<UpdateT
                 Id = rowEntity.Id,
                 Rank = rowEntity.Rank,
                 ColorHex = rowEntity.ColorHex,
-                Order = rowEntity.Order,
+                Order = rowEntity.Order.Value,
             });
     }
 }

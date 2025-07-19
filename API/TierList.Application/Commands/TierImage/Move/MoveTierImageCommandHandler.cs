@@ -1,9 +1,10 @@
 ﻿using TierList.Application.Common.DTOs.TierImage;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
+using TierList.Domain.ValueObjects;
 
 namespace TierList.Application.Commands.TierImage.Move;
 
@@ -22,84 +23,25 @@ internal sealed class MoveTierImageCommandHandler : ICommandHandler<MoveTierImag
 
     public async Task<Result<TierImageDto>> Handle(MoveTierImageCommand command)
     {
-        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
         if (listEntity is null)
         {
             return Result<TierImageDto>.Failure(
                 new Error("NotFound", $"List with ID {command.ListId} does not exist."));
         }
 
-        TierImageContainer? sourceContainer = await _tierListRepository.GetContainerByIdAsync(command.FromContainerId);
-        if (sourceContainer is null)
+        Result<TierImageEntity> imageEntityResult = listEntity.MoveImage(command.Id, command.ToContainerId, Order.Create(command.Order).Value);
+        if (!imageEntityResult.IsSuccess)
         {
-            return Result<TierImageDto>.Failure(
-                new Error("NotFound", $"Source container with ID {command.FromContainerId} not found."));
-        }
-        else if (sourceContainer.TierListId != command.ListId)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Source container with ID {command.FromContainerId} does not belong to list {command.ListId}."));
+            return Result<TierImageDto>.Failure(imageEntityResult.Error);
         }
 
-        TierImageContainer? targetContainer = await _tierListRepository.GetContainerByIdAsync(command.ToContainerId);
-        if (targetContainer is null)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("NotFound", $"Target container with ID {command.ToContainerId} not found."));
-        }
-        else if (targetContainer.TierListId != command.ListId)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Target container with ID {command.ToContainerId} does not belong to list {command.ListId}."));
-        }
-
-        List<TierImageEntity> targetContainerImages = await _tierListRepository.GetImagesAsync(command.ToContainerId);
-        int imagesCount = targetContainerImages.Count;
-        int order = command.Order;
-        if (order > imagesCount + 1)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Order {order} exceeds the number of images in the target container {command.ToContainerId}."));
-        }
-
-        List<TierImageEntity> sourceContainerImages = await _tierListRepository.GetImagesAsync(command.FromContainerId);
-        TierImageEntity? imageEntity = sourceContainerImages.FirstOrDefault(i => i.Id == command.Id);
-        if (imageEntity is null)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("NotFound", $"Image with ID {command.Id} does not exist in source container {command.FromContainerId}."));
-        }
-
-        sourceContainerImages = sourceContainerImages.OrderBy(i => i.Order).ToList();
-        sourceContainerImages.Remove(imageEntity);
-        for (int i = 0; i < sourceContainerImages.Count; i++)
-        {
-            sourceContainerImages[i].Order = i + 1;
-        }
-
-        imageEntity.ContainerId = command.ToContainerId;
-
-        targetContainerImages = targetContainerImages.OrderBy(i => i.Order).ToList();
-        targetContainerImages.Insert(order - 1, imageEntity);
-        for (int i = 0; i < imagesCount + 1; i++)
-        {
-            targetContainerImages[i].Order = i + 1;
-        }
+        TierImageEntity imageEntity = imageEntityResult.Value;
 
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-
-            foreach (var image in sourceContainerImages)
-            {
-                _tierListRepository.UpdateImage(image);
-            }
-
-            foreach (var image in targetContainerImages)
-            {
-                _tierListRepository.UpdateImage(image);
-            }
-
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -117,7 +59,7 @@ internal sealed class MoveTierImageCommandHandler : ICommandHandler<MoveTierImag
                 Url = imageEntity.Url,
                 Note = imageEntity.Note,
                 ContainerId = imageEntity.ContainerId,
-                Order = imageEntity.Order,
+                Order = imageEntity.Order.Value,
             });
     }
 }

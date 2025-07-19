@@ -1,10 +1,10 @@
-﻿using System.Text.RegularExpressions;
-using TierList.Application.Common.DTOs.TierRow;
+﻿using TierList.Application.Common.DTOs.TierRow;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
+using TierList.Domain.ValueObjects;
 
 namespace TierList.Application.Commands.TierRow.Create;
 
@@ -23,32 +23,29 @@ internal sealed class CreateTierRowCommandHandler : ICommandHandler<CreateTierRo
 
     public async Task<Result<TierRowBriefDto>> Handle(CreateTierRowCommand command)
     {
-        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
         if (listEntity is null)
         {
             return Result<TierRowBriefDto>.Failure(
                 new Error("NotFound", $"Tier list with ID {command.ListId} does not exist."));
         }
 
-        int rowsCount = (await _tierListRepository.GetRowsAsync(command.ListId)).Count();
-        if (command.Order is not null && command.Order > rowsCount + 1)
+        Result<TierRowEntity> newRowResult = listEntity.AddRow(
+            command.Rank,
+            command.ColorHex,
+            Order.Create(command.Order).Value);
+
+        if (!newRowResult.IsSuccess)
         {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Order cannot be greater than the number of existing rows plus one."));
+            return Result<TierRowBriefDto>.Failure(newRowResult.Error);
         }
 
-        TierRowEntity newRow = new()
-        {
-            TierListId = command.ListId,
-            Rank = command.Rank,
-            ColorHex = command.ColorHex,
-            Order = command.Order ?? rowsCount + 1,
-        };
+        TierRowEntity newRow = newRowResult.Value;
 
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-            _tierListRepository.AddRow(newRow);
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -65,7 +62,7 @@ internal sealed class CreateTierRowCommandHandler : ICommandHandler<CreateTierRo
                 Id = newRow.Id,
                 Rank = newRow.Rank,
                 ColorHex = newRow.ColorHex,
-                Order = newRow.Order,
+                Order = newRow.Order.Value,
             });
     }
 }

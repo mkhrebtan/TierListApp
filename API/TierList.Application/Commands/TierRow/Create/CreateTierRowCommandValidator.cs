@@ -21,7 +21,6 @@ public sealed class CreateTierRowCommandValidator : AbstractValidator<CreateTier
 
         RuleFor(x => x.Order)
             .GreaterThanOrEqualTo(1)
-            .When(x => x.Order.HasValue)
             .WithMessage("Order must be a positive integer or null.");
     }
 }

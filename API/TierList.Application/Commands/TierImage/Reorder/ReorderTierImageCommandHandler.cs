@@ -1,9 +1,10 @@
 ﻿using TierList.Application.Common.DTOs.TierImage;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
+using TierList.Domain.ValueObjects;
 
 namespace TierList.Application.Commands.TierImage.Reorder;
 
@@ -22,70 +23,25 @@ internal sealed class ReorderTierImageCommandHandler : ICommandHandler<ReorderTi
 
     public async Task<Result<TierImageDto>> Handle(ReorderTierImageCommand command)
     {
-        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
         if (listEntity is null)
         {
             return Result<TierImageDto>.Failure(
                  new Error("NotFound", $"List with ID {command.ListId} does not exist."));
         }
 
-        TierImageContainer? targetContainer = await _tierListRepository.GetContainerByIdAsync(command.ContainerId);
-        if (targetContainer is null)
+        Result<TierImageEntity> imageEntityResult = listEntity.ReorderImage(command.Id, Order.Create(command.Order).Value);
+        if (!imageEntityResult.IsSuccess)
         {
-            return Result<TierImageDto>.Failure(
-                new Error("NotFound", $"Container with ID {command.ContainerId} does not exist."));
-        }
-        else if (targetContainer.TierListId != command.ListId)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Container with ID {command.ContainerId} does not belong to list {command.ListId}."));
+            return Result<TierImageDto>.Failure(imageEntityResult.Error);
         }
 
-        List<TierImageEntity> containerImages = await _tierListRepository.GetImagesAsync(command.ContainerId);
-        TierImageEntity? imageEntity = containerImages.FirstOrDefault(i => i.Id == command.Id);
-        if (imageEntity is null)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("NotFound", $"Image with ID {command.Id} does not exist in container {command.ContainerId}."));
-        }
-
-        int imagesCount = containerImages.Count;
-        int order = command.Order;
-        if (order > imagesCount + 1)
-        {
-            return Result<TierImageDto>.Failure(
-                new Error("Validation", $"Order {order} exceeds the number of images in the container {command.ContainerId}."));
-        }
-        else if (order == imageEntity.Order)
-        {
-            return Result<TierImageDto>.Success(
-                new TierImageDto
-                {
-                    Id = imageEntity.Id,
-                    StorageKey = imageEntity.StorageKey,
-                    Url = imageEntity.Url,
-                    Note = imageEntity.Note,
-                    ContainerId = imageEntity.ContainerId,
-                    Order = imageEntity.Order,
-                });
-        }
-
-        containerImages = containerImages.OrderBy(i => i.Order).ToList();
-        containerImages.Remove(imageEntity);
-        containerImages.Insert(order - 1, imageEntity);
-        for (int i = 0; i < imagesCount; i++)
-        {
-            containerImages[i].Order = i + 1;
-        }
+        TierImageEntity imageEntity = imageEntityResult.Value;
 
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-            foreach (var image in containerImages)
-            {
-                _tierListRepository.UpdateImage(image);
-            }
-
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -103,7 +59,7 @@ internal sealed class ReorderTierImageCommandHandler : ICommandHandler<ReorderTi
                 Url = imageEntity.Url,
                 Note = imageEntity.Note,
                 ContainerId = imageEntity.ContainerId,
-                Order = imageEntity.Order,
+                Order = imageEntity.Order.Value,
             });
     }
 }

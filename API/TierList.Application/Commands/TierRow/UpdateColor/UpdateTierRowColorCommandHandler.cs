@@ -1,10 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using TierList.Application.Common.DTOs.TierRow;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Commands.TierRow;
 
@@ -23,31 +23,25 @@ internal sealed class UpdateTierRowColorCommandHandler : ICommandHandler<UpdateT
 
     public async Task<Result<TierRowBriefDto>> Handle(UpdateTierRowColorCommand command)
     {
-        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
         if (listEntity is null)
         {
             return Result<TierRowBriefDto>.Failure(
                 new Error("NotFound", $"List with ID {command.ListId} not found."));
         }
 
-        TierRowEntity? rowEntity = await _tierListRepository.GetRowByIdAsync(command.Id);
-        if (rowEntity is null)
+        Result<TierRowEntity> rowEntityResult = listEntity.UpdateRowColor(command.Id, command.ColorHex);
+        if (!rowEntityResult.IsSuccess)
         {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("NotFound", $"Row with ID {command.Id} not found."));
+            return Result<TierRowBriefDto>.Failure(rowEntityResult.Error);
         }
 
-        if (command.ListId != rowEntity.TierListId)
-        {
-            return Result<TierRowBriefDto>.Failure(
-                new Error("Validation", "Row does not belong to the specified list."));
-        }
+        TierRowEntity rowEntity = rowEntityResult.Value;
 
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-            rowEntity.ColorHex = command.ColorHex;
-            _tierListRepository.UpdateRow(rowEntity);
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }
@@ -64,7 +58,7 @@ internal sealed class UpdateTierRowColorCommandHandler : ICommandHandler<UpdateT
             Id = rowEntity.Id,
             Rank = rowEntity.Rank,
             ColorHex = rowEntity.ColorHex,
-            Order = rowEntity.Order,
+            Order = rowEntity.Order.Value,
         });
     }
 }

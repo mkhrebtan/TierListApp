@@ -1,9 +1,9 @@
 ﻿using TierList.Application.Common.DTOs.User;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Commands.JwtUser.Register;
 

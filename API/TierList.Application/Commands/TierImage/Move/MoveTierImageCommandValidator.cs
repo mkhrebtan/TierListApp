@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TierList.Domain.ValueObjects;
 
 namespace TierList.Application.Commands.TierImage.Move;
 
@@ -19,6 +20,6 @@ public sealed class MoveTierImageCommandValidator : AbstractValidator<MoveTierIm
             .GreaterThan(0).WithMessage("Target container ID must be greater than 0.");
 
         RuleFor(command => command.Order)
-            .GreaterThanOrEqualTo(1).WithMessage("Order must be a positive integer.");
+            .GreaterThanOrEqualTo(Order.MinValue).WithMessage("Order must be a positive integer.");
     }
 }

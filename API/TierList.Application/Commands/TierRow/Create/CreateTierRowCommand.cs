@@ -11,5 +11,5 @@ public sealed record CreateTierRowCommand : ICommand<TierRowBriefDto>
 
     public string ColorHex { get; init; } = "#FFFFFF";
 
-    public int? Order { get; init; } = null;
+    required public int Order { get; init; }
 }

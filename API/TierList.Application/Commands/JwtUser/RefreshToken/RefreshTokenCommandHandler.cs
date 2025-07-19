@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Options;
 using TierList.Application.Common.DTOs.User;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Application.Common.Services;
 using TierList.Application.Common.Settings;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Commands.JwtUser.RefreshToken;
 

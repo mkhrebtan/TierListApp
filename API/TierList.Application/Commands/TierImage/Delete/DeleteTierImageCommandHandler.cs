@@ -1,9 +1,9 @@
 ﻿using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Application.Common.Services;
 using TierList.Domain.Abstraction;
 using TierList.Domain.Entities;
 using TierList.Domain.Repos;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Commands.TierImage.Delete;
 
@@ -25,54 +25,29 @@ internal sealed class DeleteTierImageCommandHandler : ICommandHandler<DeleteTier
 
     public async Task<Result> Handle(DeleteTierImageCommand command)
     {
-        TierListEntity? listEntity = await _tierListRepository.GetByIdAsync(command.ListId);
+        TierListEntity? listEntity = await _tierListRepository.GetTierListWithDataAsync(command.ListId);
         if (listEntity is null)
         {
             return Result.Failure(
                 new Error("NotFound", $"List with ID {command.ListId} does not exist."));
         }
 
-        TierImageContainer? containerEntity = await _tierListRepository.GetContainerByIdAsync(command.ContainerId);
-        if (containerEntity is null)
+        Result<TierImageEntity> imageEntityResult = listEntity.RemoveImage(command.Id);
+        if (!imageEntityResult.IsSuccess)
         {
-            return Result.Failure(
-                new Error("NotFound", $"Container with ID {command.ContainerId} does not exist."));
-        }
-        else if (containerEntity.TierListId != command.ListId)
-        {
-            return Result.Failure(
-                new Error("Validation", $"Container with ID {command.ContainerId} does not belong to list {command.ListId}."));
+            return Result.Failure(imageEntityResult.Error);
         }
 
-        List<TierImageEntity> containerImages = (await _tierListRepository.GetImagesAsync(command.ContainerId)).OrderBy(i => i.Order).ToList();
-        TierImageEntity? imageEntity = containerImages.FirstOrDefault(i => i.Id == command.Id);
-        if (imageEntity is null)
-        {
-            return Result.Failure(
-                new Error("NotFound", $"Image with ID {command.Id} does not exist in container {command.ContainerId}."));
-        }
-
-        var s3DeleteResult = await _imageStorageService.DeleteImageAsync(imageEntity.StorageKey);
+        var s3DeleteResult = await _imageStorageService.DeleteImageAsync(imageEntityResult.Value.StorageKey);
         if (!s3DeleteResult.IsSuccess)
         {
             return s3DeleteResult;
         }
 
-        containerImages.Remove(imageEntity);
-        for (int i = 0; i < containerImages.Count; i++)
-        {
-            containerImages[i].Order = i + 1;
-        }
-
         try
         {
             await _unitOfWork.CreateTransactionAsync();
-            _tierListRepository.DeleteImage(imageEntity);
-            foreach (var image in containerImages)
-            {
-                _tierListRepository.UpdateImage(image);
-            }
-
+            _tierListRepository.Update(listEntity);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
         }

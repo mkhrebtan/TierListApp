@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TierList.Domain.Entities;
 
 namespace TierList.Application.Commands.TierList.Update;
 
@@ -18,7 +19,7 @@ public sealed class UpdateTierListCommandValidator : AbstractValidator<UpdateTie
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
             .WithMessage("List title cannot be empty.")
-            .MaximumLength(100)
+            .MaximumLength(TierListEntity.MaxTitleLength)
             .WithMessage("List title cannot exceed 100 characters.");
     }
 }
