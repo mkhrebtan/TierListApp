@@ -1,4 +1,4 @@
-﻿using TierList.Application.Common.Models;
+﻿using TierList.Domain.Shared;
 
 namespace TierList.Application.Common.Interfaces;
 

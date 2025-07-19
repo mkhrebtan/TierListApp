@@ -1,7 +1,7 @@
 ﻿using TierList.Application.Common.DTOs.TierImage;
 using TierList.Application.Common.Interfaces;
-using TierList.Application.Common.Models;
 using TierList.Application.Common.Services;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Queries.GetUploadUrl;
 

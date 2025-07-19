@@ -2,8 +2,8 @@
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using TierList.Application.Common.DTOs.TierImage;
-using TierList.Application.Common.Models;
 using TierList.Application.Common.Services;
+using TierList.Domain.Shared;
 using TierList.Infrastructure.Settings;
 
 namespace TierList.Infrastructure.Services;

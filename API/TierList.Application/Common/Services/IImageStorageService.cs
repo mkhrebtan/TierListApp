@@ -1,5 +1,5 @@
 ﻿using TierList.Application.Common.DTOs.TierImage;
-using TierList.Application.Common.Models;
+using TierList.Domain.Shared;
 
 namespace TierList.Application.Common.Services;
 
