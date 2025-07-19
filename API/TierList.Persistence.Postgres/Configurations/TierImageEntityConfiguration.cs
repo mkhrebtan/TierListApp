@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TierList.Domain.Entities;
+using TierList.Domain.ValueObjects;
 
 namespace TierList.Persistence.Postgres.Configurations;
 
@@ -35,9 +36,16 @@ internal class TierImageEntityConfiguration : IEntityTypeConfiguration<TierImage
             .IsRequired();
 
         builder.Property(i => i.Note)
-            .HasDefaultValue(string.Empty);
+            .HasDefaultValue(string.Empty)
+            .HasMaxLength(TierImageEntity.MaxNoteLength);
 
-        builder.HasOne(i => i.Container)
+        builder.Property(i => i.Order)
+            .HasConversion(
+                order => order.Value,
+                value => Order.Create(value).Value)
+            .IsRequired();
+
+        builder.HasOne<TierImageContainer>()
             .WithMany(c => c.Images)
             .HasForeignKey(i => i.ContainerId);
     }

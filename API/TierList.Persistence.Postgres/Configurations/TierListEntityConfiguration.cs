@@ -12,13 +12,13 @@ namespace TierList.Persistence.Postgres.Configurations;
 public class TierListEntityConfiguration : IEntityTypeConfiguration<TierListEntity>
 {
     /// <summary>
-    /// Configures the entity type for the <see cref="TierListEntity"/> class.
+    /// Configures the entity of type <see cref="TierListEntity"/> in the database context.
     /// </summary>
-    /// <remarks>This method configures the database table name, primary key, and relationships for the  <see
-    /// cref="TierListEntity"/> entity. The table is mapped to "List", the primary key is  configured to auto-generate
-    /// values, and a one-to-many relationship is established with  the containers associated with the tier
-    /// list.</remarks>
-    /// <param name="builder">An <see cref="EntityTypeBuilder{TEntity}"/> instance used to configure the entity type.</param>
+    /// <remarks>This method sets up the table mapping, primary key, and relationships for the <see
+    /// cref="TierListEntity"/>. It specifies the table name, configures the primary key to be auto-generated, and
+    /// enforces constraints on the <c>Title</c> property. Additionally, it establishes relationships with the
+    /// <c>Containers</c> collection and the <c>User</c> entity.</remarks>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     public void Configure(EntityTypeBuilder<TierListEntity> builder)
     {
         builder.ToTable("List");
@@ -29,13 +29,13 @@ public class TierListEntityConfiguration : IEntityTypeConfiguration<TierListEnti
 
         builder.Property(t => t.Title)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(TierListEntity.MaxTitleLength);
 
         builder.HasMany(t => t.Containers)
-            .WithOne(c => c.TierList)
+            .WithOne()
             .HasForeignKey(c => c.TierListId);
 
-        builder.HasOne(t => t.User)
+        builder.HasOne<User>()
             .WithMany(u => u.TierLists)
             .HasForeignKey(t => t.UserId);
     }

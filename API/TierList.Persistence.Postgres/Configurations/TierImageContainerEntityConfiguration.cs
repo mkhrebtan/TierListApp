@@ -32,12 +32,12 @@ internal class TierImageContainerEntityConfiguration : IEntityTypeConfiguration<
             .HasValue<TierRowEntity>("TierRow")
             .HasValue<TierBackupRowEntity>("TierBackupRow");
 
-        builder.HasOne(c => c.TierList)
+        builder.HasOne<TierListEntity>()
             .WithMany(t => t.Containers)
             .HasForeignKey(c => c.TierListId);
 
         builder.HasMany(c => c.Images)
-            .WithOne(i => i.Container)
+            .WithOne()
             .HasForeignKey(i => i.ContainerId);
     }
 }

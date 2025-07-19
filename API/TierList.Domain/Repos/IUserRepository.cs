@@ -1,5 +1,4 @@
-﻿using TierList.Domain.Abstraction;
-using TierList.Domain.Entities;
+﻿using TierList.Domain.Entities;
 
 namespace TierList.Domain.Repos;
 
@@ -15,7 +14,7 @@ public interface IUserRepository : IRepository<User>
     /// Retrieves a user asynchronously based on the specified username.
     /// </summary>
     /// <param name="username">The username of the user to retrieve. Cannot be null or empty.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the user object if found; 
+    /// <returns>A task that represents the asynchronous operation. The task result contains the user object if found;
     /// otherwise, <see langword="null"/>.</returns>
     Task<User?> GetByUsernameAsync(string username);
 

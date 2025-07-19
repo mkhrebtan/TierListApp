@@ -26,7 +26,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(256);
 
         builder.HasMany(u => u.TierLists)
-            .WithOne(t => t.User)
+            .WithOne()
             .HasForeignKey(t => t.UserId);
 
         builder.HasMany(u => u.RefreshTokens)

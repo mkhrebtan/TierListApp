@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TierList.Domain.Abstraction;
+using TierList.Domain.Repos;
 
 namespace TierList.Persistence.Postgres.Repos;
 
@@ -13,7 +14,7 @@ namespace TierList.Persistence.Postgres.Repos;
 /// <typeparam name="TEntity">The type of the entity managed by the repository. Must be a class that implements the <see cref="IEntity"/>
 /// interface.</typeparam>
 public class GenericRepository<TEntity> : IRepository<TEntity>
-    where TEntity : class, IEntity
+    where TEntity : Entity
 {
     /// <summary>
     /// Represents the database context used for accessing and managing data in the tier list application.

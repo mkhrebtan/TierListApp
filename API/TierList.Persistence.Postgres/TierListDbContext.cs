@@ -73,6 +73,7 @@ public class TierListDbContext : DbContext
     {
         modelBuilder.ApplyConfiguration(new TierListEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TierImageContainerEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new TierRowEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TierImageEntityConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
