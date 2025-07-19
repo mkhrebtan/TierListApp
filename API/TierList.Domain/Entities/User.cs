@@ -7,13 +7,8 @@ namespace TierList.Domain.Entities;
 /// </summary>
 /// <remarks>This class contains properties for user identification, authentication, and related entities such as
 /// tier lists and refresh tokens.</remarks>
-public class User : IEntity
+public class User : Entity
 {
-    /// <summary>
-    /// Gets or sets the unique identifier for the entity.
-    /// </summary>
-    public int Id { get; set; }
-
     /// <summary>
     /// Gets or sets the username associated with the user.
     /// </summary>

@@ -1,4 +1,6 @@
-﻿namespace TierList.Domain.Entities;
+﻿using TierList.Domain.Abstraction;
+
+namespace TierList.Domain.Entities;
 
 /// <summary>
 /// Represents a refresh token used for authentication and session management.
@@ -6,13 +8,8 @@
 /// <remarks>A refresh token is typically issued to a user upon successful authentication and is used to obtain
 /// new access tokens without requiring the user to reauthenticate. This class contains information about the token, its
 /// expiration, and its association with a user.</remarks>
-public class RefreshToken
+public class RefreshToken : Entity
 {
-    /// <summary>
-    /// Gets or sets the unique identifier for the entity.
-    /// </summary>
-    public int Id { get; set; }
-
     /// <summary>
     /// Gets or sets the unique identifier for the user.
     /// </summary>
@@ -34,7 +31,7 @@ public class RefreshToken
     public bool IsRevoked { get; set; }
 
     /// <summary>
-    /// Gets or sets the user associated with the current context.
+    /// Gets or sets the current user associated with the session.
     /// </summary>
-    public User? User { get; set; }
+    public User? User { get; set; } = null!;
 }
