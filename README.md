@@ -6,14 +6,20 @@ A full-stack tier list creation and management application built with **ASP.NET 
 
 *Screenshots will be added here to showcase the application in action*
 
-### Home Page
-![Home Page](path/to/home-screenshot.png)
+### Library Page
+![Home Page](./screenshots/Tier%20List%20App%20-%20Lib.png)
+
+### Adding New List
+![Home Page](./screenshots/Tier%20List%20App%20-%20add%20list.png)
 
 ### Tier List Editor
-![Tier List Editor](path/to/editor-screenshot.png)
+![Tier List Editor](./screenshots/Tier%20List%20App%20-%20List.png)
+
+### Tier List Rank Customize
+![Tier List Editor](./screenshots/Tier%20List%20App%20-%20edit%20rank.png)
 
 ### User Authentication
-![Authentication](path/to/auth-screenshot.png)
+![Authentication](./screenshots/Tier%20List%20App%20-%20Log%20in_Sign%20up.png)
 
 ## 🚀 Features
 
